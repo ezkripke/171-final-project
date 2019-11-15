@@ -45,7 +45,7 @@ TileGridVis.prototype.initVis = function() {
         .domain([
             0,
             d3.max(vis.data, function(d) {
-                return d3.max(d.origValues, y => y.pct_imprisoned);
+                return d3.max(d.origValues, y => y.pct_imprisoned) + 0.005;
             })
         ])
         .range([vis.y.bandwidth(), 0]);
@@ -133,7 +133,15 @@ Tile.prototype.initVis = function() {
     vis.parent.append("rect")
         .attr("width", vis.width)
         .attr("height", vis.height)
-        .attr("fill", "#eeeeee");
+        .style("fill", function() {
+            if (vis.data.party === "R") {
+                return "indianred";
+            } else {
+                return "cornflowerblue";
+            }
+        })
+        .style("fill-opacity", 0.15)
+        .attr("stroke", "black");
 
     vis.parent.append("text")
         .text(vis.data.state)
@@ -142,22 +150,20 @@ Tile.prototype.initVis = function() {
         .attr("x", 5)
         .attr("y", 10);
 
-    vis.xAxis = d3.axisBottom()
-        .scale(vis.x)
-        .tickSize(0)
-        .ticks(0);
-    vis.yAxis = d3.axisLeft()
-        .scale(vis.y)
-        .tickSize(0)
-        .ticks(0);
+    let pct_imprisoned = vis.data.origValues
+        .filter(d => d.pct_imprisoned !== 0);
+    if (pct_imprisoned.length > 0) {
+        pct_imprisoned = pct_imprisoned[pct_imprisoned.length - 1].pct_imprisoned;
+        let pct_imprisoned_text = d3.format(".3%")(pct_imprisoned);
 
-    vis.parent.append("g")
-        .attr("class", "axis tile-x-axis")
-        .attr("transform", "translate(0," + vis.height + ")")
-        .call(vis.xAxis);
-    vis.parent.append("g")
-        .attr("class", "axis tile-y-axis")
-        .call(vis.yAxis);
+        vis.parent.append("text")
+            .text(pct_imprisoned_text)
+            .style("font-size", "10px")
+            .attr("text-anchor", "start")
+            .attr("fill", "red")
+            .attr("x", 5)
+            .attr("y", 22);
+    }
 
     vis.area = d3.area()
         .x0(d => vis.x(d.data.year))
@@ -186,6 +192,3 @@ Tile.prototype.updateVis = function() {
         .attr("d", vis.area)
         .style("fill", d => vis.c(d.key));
 };
-
-
-

@@ -35,7 +35,8 @@ function loadData(error, usTileGrid, incarcerationTrends) {
             "stateName": usTileGrid[state].stateName,
             "origValues": incarcerationTrends[state],
             "row": +usTileGrid[state].row,
-            "col": +usTileGrid[state].col
+            "col": +usTileGrid[state].col,
+            "party": usTileGrid[state].party
         });
     }
 
