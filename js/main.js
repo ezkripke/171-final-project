@@ -8,7 +8,7 @@ function loadData(error, usTileGrid, incarcerationTrends) {
         .key(d => d.state)
         .rollup(d => d[0])
         .object(usTileGrid);
-
+    
     incarcerationTrends = d3.nest()
         .key(d => d.state)
         .rollup(function(d) {
@@ -43,4 +43,5 @@ function loadData(error, usTileGrid, incarcerationTrends) {
     console.log(tileGridData);
 
     let tileGridVis = new TileGridVis("#small-mult-area", tileGridData);
+    let bubbleVis = new BubbleVis("#bubble-area", incarcerationTrends);
 }
