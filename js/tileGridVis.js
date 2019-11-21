@@ -3,6 +3,9 @@ function TileGridVis(parent, data) {
 
     vis.parent = d3.select(parent);
     vis.data = data;
+    vis.data.sort((a, b) => b.totalPrisonPop - a.totalPrisonPop);
+
+    vis.displayMode = "geo";
 
     vis.tiles = [];
 
@@ -54,11 +57,29 @@ TileGridVis.prototype.initVis = function() {
             "pct_asian_total",
             "pct_white_total",
             "pct_black_total",
-            "pct_other_total",
             "pct_latino_total",
-            "pct_native_total"
+            "pct_native_total",
+            "pct_other_total"
         ])
         .range(d3.schemeCategory10.slice(0, 6));
+
+    vis.svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(" + (vis.width - 100) + "," + (vis.height - 225) + ")");
+
+    let legend = d3.legendColor()
+        .labels([
+            "Asian",
+            "White",
+            "Black",
+            "Latino",
+            "Native",
+            "Other"
+        ])
+        .scale(vis.tileC);
+
+    vis.svg.select(".legend")
+        .call(legend);
 
     vis.wrangleData();
 };
@@ -66,18 +87,10 @@ TileGridVis.prototype.initVis = function() {
 TileGridVis.prototype.wrangleData = function() {
     let vis = this;
 
-    let stack = d3.stack()
-        .keys([
-            "pct_asian_total",
-            "pct_white_total",
-            "pct_black_total",
-            "pct_other_total",
-            "pct_latino_total",
-            "pct_native_total"
-        ])
-        .order(d3.stackOrderAscending);
+    let stack = d3.stack();
 
     vis.data.forEach(function(stateData) {
+        stack.keys(stateData.orderedKeys);
         stateData.values = stack(stateData.origValues);
     });
 
@@ -96,6 +109,18 @@ TileGridVis.prototype.updateVis = function() {
         .attr("id", d => d.state)
         .attr("transform", function(d) {
             return "translate(" + vis.x(d.col) + "," + vis.y(d.row) + ")";
+        })
+        .merge(states)
+        .transition()
+        .duration(1000)
+        .attr("transform", function(d, i) {
+            let col = d.col;
+            let row = d.row;
+            if (vis.displayMode === "prisonPop") {
+                col = i % 11;
+                row = Math.floor(i / 11);
+            }
+            return "translate(" + vis.x(col) + "," + vis.y(row) + ")";
         });
 
     if (vis.tiles.length === 0) {
@@ -111,6 +136,12 @@ TileGridVis.prototype.updateVis = function() {
             );
         });
     }
+};
+
+TileGridVis.prototype.onButtonPress = function(mode) {
+    let vis = this;
+    vis.displayMode = mode;
+    vis.updateVis();
 };
 
 function Tile(parent, data, x, y, c) {
@@ -131,16 +162,10 @@ Tile.prototype.initVis = function() {
     let vis = this;
 
     vis.parent.append("rect")
+        .attr("class", "tile")
         .attr("width", vis.width)
         .attr("height", vis.height)
-        .style("fill", function() {
-            if (vis.data.party === "R") {
-                return "indianred";
-            } else {
-                return "cornflowerblue";
-            }
-        })
-        .style("fill-opacity", 0.15)
+        .style("fill-opacity", 0.3)
         .attr("stroke", "black");
 
     vis.parent.append("text")
@@ -150,17 +175,17 @@ Tile.prototype.initVis = function() {
         .attr("x", 5)
         .attr("y", 10);
 
-    let pct_imprisoned = vis.data.origValues
-        .filter(d => d.pct_imprisoned !== 0);
-    if (pct_imprisoned.length > 0) {
-        pct_imprisoned = pct_imprisoned[pct_imprisoned.length - 1].pct_imprisoned;
-        let pct_imprisoned_text = d3.format(".3%")(pct_imprisoned);
+    if (vis.data.hasData) {
+         vis.parent.select("rect.tile")
+             .style("fill", vis.c(vis.data.orderedKeys[vis.data.orderedKeys.length - 1]));
+
+        let pct_imprisoned_text = d3.format(".3%")(vis.data.pctImprisoned);
 
         vis.parent.append("text")
             .text(pct_imprisoned_text)
             .style("font-size", "10px")
             .attr("text-anchor", "start")
-            .attr("fill", "red")
+            .attr("fill", "blue")
             .attr("x", 5)
             .attr("y", 22);
     }
