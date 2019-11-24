@@ -1,9 +1,12 @@
 queue()
     .defer(d3.csv, "data/us_tile_grid.csv")
     .defer(d3.csv, "data/incarceration_trends_clean.csv")
+    .defer(d3.csv, "data/StatePrisonRateByYear.csv")
+    .defer(d3.csv, "data/stateAbbrevs.csv")
+    .defer(d3.json, "data/states-10m.json")
     .await(loadData);
 
-function loadData(error, usTileGrid, incarcerationTrends) {
+function loadData(error, usTileGrid, incarcerationTrends, stateData, stateAbbrevs, stateJson) {
     usTileGrid = d3.nest()
         .key(d => d.state)
         .rollup(d => d[0])
@@ -70,6 +73,7 @@ function loadData(error, usTileGrid, incarcerationTrends) {
 
     let tileGridVis = new TileGridVis("#small-mult-area", tileGridData);
     let bubbleVis = new BubbleVis("#bubble-area", incarcerationTrends);
+    let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson);
 
     d3.select("#tile-grid-btn")
         .on("mousedown", function() {
