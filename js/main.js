@@ -29,20 +29,58 @@ function loadData(error, usTileGrid, incarcerationTrends, prisonPop) {
         })
         .object(incarcerationTrends);
 
+    let keys = [
+        "pct_asian_total",
+        "pct_white_total",
+        "pct_black_total",
+        "pct_other_total",
+        "pct_latino_total",
+        "pct_native_total"
+    ];
+
     let tileGridData = [];
     for (let state in incarcerationTrends) {
+        let filteredData = incarcerationTrends[state].filter(d => d.pct_imprisoned !== 0);
+        let orderedKeys = keys.slice();
+        let hasData = false;
+        let pctImprisoned = null;
+        let totalPrisonPop = -1;
+        if (filteredData.length > 0) {
+            hasData = true;
+            filteredData = filteredData[filteredData.length - 1];
+            orderedKeys.sort(function(a, b) {
+                return filteredData[a] - filteredData[b];
+            });
+            pctImprisoned = filteredData.pct_imprisoned;
+            totalPrisonPop = filteredData.total_prison_pop;
+        }
         tileGridData.push({
             "state": state,
             "stateName": usTileGrid[state].stateName,
             "origValues": incarcerationTrends[state],
             "row": +usTileGrid[state].row,
             "col": +usTileGrid[state].col,
-            "party": usTileGrid[state].party
+            "orderedKeys": orderedKeys,
+            "hasData": hasData,
+            "pctImprisoned": pctImprisoned,
+            "totalPrisonPop": totalPrisonPop
         });
     }
 
     console.log(tileGridData);
 
     let tileGridVis = new TileGridVis("#small-mult-area", tileGridData);
-    let bubbleVis = new BubbleVis("#bubble-area", prisonPop);
+    let bubbleVis = new BubbleVis("#bubble-area", incarcerationTrends);
+
+    d3.select("#tile-grid-btn")
+        .on("mousedown", function() {
+            let btn = d3.select(this);
+            if (btn.text() === "Sort by Prison Population") {
+                btn.text("View as Map");
+                tileGridVis.onButtonPress("prisonPop");
+            } else {
+                btn.text("Sort by Prison Population");
+                tileGridVis.onButtonPress("geo");
+            }
+        })
 }
