@@ -1,9 +1,10 @@
 queue()
     .defer(d3.csv, "data/us_tile_grid.csv")
     .defer(d3.csv, "data/incarceration_trends_clean.csv")
+    .defer(d3.csv, "data/prison_population.csv")
     .await(loadData);
 
-function loadData(error, usTileGrid, incarcerationTrends) {
+function loadData(error, usTileGrid, incarcerationTrends, prisonPop) {
     usTileGrid = d3.nest()
         .key(d => d.state)
         .rollup(d => d[0])
@@ -43,5 +44,5 @@ function loadData(error, usTileGrid, incarcerationTrends) {
     console.log(tileGridData);
 
     let tileGridVis = new TileGridVis("#small-mult-area", tileGridData);
-    let bubbleVis = new BubbleVis("#bubble-area", incarcerationTrends);
+    let bubbleVis = new BubbleVis("#bubble-area", prisonPop);
 }
