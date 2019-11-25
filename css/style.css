@@ -1,13 +1,8 @@
 body {
     margin-left: auto;
     margin-right: auto;
-<<<<<<< HEAD
-    font-family: "Garamond", serif;
-    background-color: #eeeeee;
-=======
     font-family: "Muli", sans-serif;
     background-color: mintcream;
->>>>>>> efcf3166f4447df1b91d6288283108ca455dd301
     color: black;
     text-align: center;
 }
@@ -26,11 +21,11 @@ body {
     width: 1080px;
 }
 
-#bubble-area {
+.bubble-vis {
     background-color: white;
     border-radius: 5px;
     box-shadow: 0px 5px 10px 0px rgba(0,0,0,0.5);
-    font-size: 40px;
+    font-size: 20px;
     margin-right: 10px;
     margin-left: 10px;
 }

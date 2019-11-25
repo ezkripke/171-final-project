@@ -40,11 +40,18 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
 
     let tileGridVis = new TileGridVis("#small-mult-area", raceData, eventHandler);
     let usLineVis = new USLineVis("#us-line-area", USData, eventHandler);
+
+    let bubbleVis = new BubbleVis("#bubble-area", raceData);
+    d3.select("#bubble-choice").on("change", function() {
+        bubbleVis.wrangleData();
+    });
+
     let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson);
 
     $(eventHandler).bind("tileMouseOver", function(e, stateData) {
         usLineVis.onTileMouseOver(stateData);
     });
+
     $(eventHandler).bind("tileMouseOut", function() {
         usLineVis.onTileMouseOut();
     });
@@ -52,6 +59,7 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
     $(eventHandler).bind("USLineMouseOver", function(e, race) {
         tileGridVis.onUSLineMouseOver(race);
     });
+
     $(eventHandler).bind("USLineMouseOut", function() {
         tileGridVis.onUSLineMouseOut();
     });
