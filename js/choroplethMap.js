@@ -62,7 +62,7 @@ MapVis.prototype.initVis = function() {
             var abbrev = vis.abToName[currState];
             vis.indexedData[abbrev] = d;
         });
-        //console.log("indexed data", vis.indexedData);
+        console.log("indexed data", vis.indexedData);
 
         // Initialize color scale
         // Put all number vals into an array
@@ -129,8 +129,9 @@ MapVis.prototype.initVis = function() {
 
     // initialize slider
     // Adapted from https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
-    var dataTime = d3.range(0, 10).map(function(d) {
-        return new Date(1995 + d, 10, 3);
+    // More info at https://github.com/johnwalley/d3-simple-slider
+    var dataTime = d3.range(0, 19).map(function(d) {
+        return new Date(1978 + (d*2), 10, 3);
     });
 
     var sliderTime = d3
@@ -138,10 +139,11 @@ MapVis.prototype.initVis = function() {
         .min(d3.min(dataTime))
         .max(d3.max(dataTime))
         .step(1000 * 60 * 60 * 24 * 365)
-        .width(300)
+        .width(800)
         .tickFormat(d3.timeFormat('%Y'))
         .tickValues(dataTime)
-        .default(new Date(1998, 10, 3));
+        .default(new Date(1998, 10, 3))
+    ;
 
     var gTime = d3
         .selectAll("svg")
