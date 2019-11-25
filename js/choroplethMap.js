@@ -145,8 +145,7 @@ MapVis.prototype.initVis = function() {
         .default(new Date(1998, 10, 3))
     ;
 
-    var gTime = d3
-        .selectAll("svg")
+    var gTime = vis.svg
         .append('g')
         .attr('transform', 'translate(30,30)');
 
