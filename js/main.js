@@ -9,9 +9,12 @@ let colors = [
 queue()
     .defer(d3.csv, "data/us_tile_grid.csv")
     .defer(d3.csv, "data/race_ethnicity_gender_2010.csv")
+    .defer(d3.csv, "data/StatePrisonRateByYear.csv")
+    .defer(d3.csv, "data/stateAbbrevs.csv")
+    .defer(d3.json, "data/states-10m.json")
     .await(loadData);
 
-function loadData(error, usTileGrid, raceData) {
+function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJson) {
     usTileGrid = d3.nest()
         .key(d => d.state)
         .rollup(d => d[0])
@@ -33,12 +36,11 @@ function loadData(error, usTileGrid, raceData) {
     let USData = raceData[0];
     raceData = raceData.slice(1, raceData.length);
 
-    console.log(raceData);
-
     let eventHandler = {};
 
     let tileGridVis = new TileGridVis("#small-mult-area", raceData, eventHandler);
     let usLineVis = new USLineVis("#us-line-area", USData, eventHandler);
+    let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson);
 
     $(eventHandler).bind("tileMouseOver", function(e, stateData) {
          usLineVis.onTileMouseOver(stateData);
