@@ -7,6 +7,7 @@ BubbleVis = function(_parentElement, _data) {
     this.parentElement = _parentElement;
     this.data = _data;
     this.displayData = _data;
+    this.nodes = [];
     this.initVis();
 };
 
@@ -25,28 +26,23 @@ BubbleVis.prototype.initVis = function() {
         .append("g")
         .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")");
 
-    const sum = (lst => lst.reduce(((a,b) => a+b),0));
-
-    console.log(vis.data);
-    vis.data = d3.nest()
-        .key(d => d.state)
-        // .rollup(v => )
-        .entries(vis.data);
-    console.log(vis.data);
-
-    // scales & force directed initialization stuff
+    let simulation = d3.forceSimulation()
+        .force('charge', d3.forceManyBody().strength(-20))
+        .force('center', d3.forceCenter(vis.width / 2, vis.height / 2));
 
     vis.wrangleData();
 };
 
-
+// Creates Nodes from data
 BubbleVis.prototype.wrangleData = function() {
     let vis = this;
     console.log("BubbleVis::wrangleData");
-    // console.log(vis.data);
-    let selected = "TX"; // TODO: form for state selection
+    let nodes = d3.range(0, 1000).map(_ => {});
 
 
+    vis.data.forEach(function(o) {
+
+    });
 
     vis.updateVis();
 };
@@ -54,7 +50,7 @@ BubbleVis.prototype.wrangleData = function() {
 
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
-    console.log("BubbleVis::updateVis");
 
-    //TODO
+    // filter based on user selection
+
 };

@@ -2,7 +2,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     font-family: "Garamond", serif;
-    background-color: mintcream;
+    background-color: #eeeeee;
     color: black;
     text-align: center;
 }
@@ -22,9 +22,12 @@ body {
 }
 
 #bubble-area {
-    background-color: #eeeeee;
-    color: white;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0px 5px 10px 0px rgba(0,0,0,0.5);
     font-size: 40px;
+    margin-right: 10px;
+    margin-left: 10px;
 }
 
 .placeholder-text {
