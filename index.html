@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>CS171 - Final Project</title>
 
+	<link href="https://fonts.googleapis.com/css?family=Muli&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/style.css">
 </head>
@@ -33,13 +34,11 @@
 
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-12">
-					<button class="btn btn-primary" id="tile-grid-btn">Sort by Prison Population</button>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
+				<div class="col-md-8">
 					<div id="small-mult-area"></div>
+				</div>
+				<div class="col-md-4">
+					<div id="us-line-area"></div>
 				</div>
 			</div>
 		</div>
@@ -73,6 +72,7 @@
 	<script src="js/d3-scale-chromatic.min.js"></script>
 	
 	<!-- Our vis files below-->
+	<script src="js/usLineVis.js"></script>
 	<script src="js/tileGridVis.js"></script>
 	<script src="js/bubbleVis.js"></script>
 	<script src="js/choroplethMap.js"></script>
