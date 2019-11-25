@@ -1,8 +1,13 @@
 body {
     margin-left: auto;
     margin-right: auto;
+<<<<<<< HEAD
     font-family: "Garamond", serif;
     background-color: #eeeeee;
+=======
+    font-family: "Muli", sans-serif;
+    background-color: mintcream;
+>>>>>>> efcf3166f4447df1b91d6288283108ca455dd301
     color: black;
     text-align: center;
 }
@@ -42,4 +47,8 @@ body {
     color: white;
     padding: 300px 20px;
     background-color: gray;
+}
+
+line.tile-line {
+    pointer-events: none;
 }

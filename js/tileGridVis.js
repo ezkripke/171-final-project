@@ -1,9 +1,10 @@
-function TileGridVis(parent, data) {
+function TileGridVis(parent, data, eventHandler) {
     let vis = this;
 
     vis.parent = d3.select(parent);
     vis.data = data;
-    vis.data.sort((a, b) => b.totalPrisonPop - a.totalPrisonPop);
+    vis.data.sort((a, b) => b.TotalPrison - a.TotalPrison);
+    vis.eventHandler = eventHandler;
 
     vis.displayMode = "geo";
 
@@ -15,16 +16,19 @@ function TileGridVis(parent, data) {
 TileGridVis.prototype.initVis = function() {
     let vis = this;
 
-    vis.margin = {"top": 50, "left": 50, "right": 50, "bottom": 50}
+    vis.margin = {"top": 0, "left": 0, "right": 0, "bottom": 0};
 
-    vis.width = 1000 - vis.margin.left - vis.margin.right;
-    vis.height = 800 - vis.margin.top - vis.margin.bottom;
+    let width = vis.parent.node().getBoundingClientRect().width;
+    let height = 8 / 11 * width;
+
+    vis.width = width - vis.margin.left - vis.margin.right;
+    vis.height = height - vis.margin.top - vis.margin.bottom;
 
     vis.svg = vis.parent.append("svg")
         .attr("width", vis.width + vis.margin.left + vis.margin.right)
         .attr("height", vis.height + vis.margin.top + vis.margin.bottom)
         .append("g")
-        .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.right + ")");
+        .attr("transform", "translate(" + vis.margin.left + "," + vis.margin.top + ")");
 
     vis.x = d3.scaleBand()
         .domain(d3.range(
@@ -41,41 +45,29 @@ TileGridVis.prototype.initVis = function() {
         .range([0, vis.height])
         .paddingInner(0.1);
 
-    vis.tileX = d3.scaleLinear()
-        .domain([1970, 2015])
+    vis.tileX = d3.scaleOrdinal()
+        .domain(["Total", "Prison"])
         .range([0, vis.x.bandwidth()]);
     vis.tileY = d3.scaleLinear()
-        .domain([
-            0,
-            d3.max(vis.data, function(d) {
-                return d3.max(d.origValues, y => y.pct_imprisoned) + 0.005;
-            })
-        ])
+        .domain([0, 1])
         .range([vis.y.bandwidth(), 0]);
     vis.tileC = d3.scaleOrdinal()
         .domain([
-            "pct_asian_total",
-            "pct_white_total",
-            "pct_black_total",
-            "pct_latino_total",
-            "pct_native_total",
-            "pct_other_total"
-        ])
-        .range(d3.schemeCategory10.slice(0, 6));
-
-    vis.svg.append("g")
-        .attr("class", "legend")
-        .attr("transform", "translate(" + (vis.width - 100) + "," + (vis.height - 225) + ")");
-
-    let legend = d3.legendColor()
-        .labels([
             "Asian",
             "White",
             "Black",
             "Latino",
-            "Native",
             "Other"
         ])
+        .range(d3.schemeCategory10.slice(0, 5));
+
+    vis.svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(" + (vis.width - 100) + "," + (vis.height - 150) + ")")
+        .style("font-size", "13px");
+
+    let legend = d3.legendColor()
+        .labels(vis.keys)
         .scale(vis.tileC);
 
     vis.svg.select(".legend")
@@ -87,26 +79,19 @@ TileGridVis.prototype.initVis = function() {
 TileGridVis.prototype.wrangleData = function() {
     let vis = this;
 
-    let stack = d3.stack();
-
-    vis.data.forEach(function(stateData) {
-        stack.keys(stateData.orderedKeys);
-        stateData.values = stack(stateData.origValues);
-    });
-
     vis.updateVis();
 };
 
-TileGridVis.prototype.updateVis = function() {
+TileGridVis.prototype.updateVis = function(race) {
     let vis = this;
 
     let states = vis.svg.selectAll("g.state")
-        .data(vis.data, d => d.state);
+        .data(vis.data, d => d.GEOID);
 
     states.enter()
         .append("g")
         .attr("class", "state")
-        .attr("id", d => d.state)
+        .attr("id", d => d.GEOID)
         .attr("transform", function(d) {
             return "translate(" + vis.x(d.col) + "," + vis.y(d.row) + ")";
         })
@@ -127,33 +112,49 @@ TileGridVis.prototype.updateVis = function() {
         vis.data.forEach(function(d) {
             vis.tiles.push(
                 new Tile(
-                    "g.state#" + d.state,
+                    "g.state#" + d.GEOID,
                     d,
                     vis.tileX,
                     vis.tileY,
-                    vis.tileC
+                    vis.tileC,
+                    vis.eventHandler
                 )
             );
+        });
+    } else {
+        vis.tiles.forEach(function (t) {
+            t.updateVis(race);
         });
     }
 };
 
-TileGridVis.prototype.onButtonPress = function(mode) {
-    let vis = this;
-    vis.displayMode = mode;
-    vis.updateVis();
+TileGridVis.prototype.onUSLineMouseOver = function(race) {
+    this.updateVis(race);
 };
 
-function Tile(parent, data, x, y, c) {
+TileGridVis.prototype.onUSLineMouseOut = function() {
+    this.updateVis();
+};
+
+function Tile(parent, data, x, y, c, eventHandler) {
     let vis = this;
 
     vis.parent = d3.select(parent);
     vis.data = data;
+    vis.eventHandler = eventHandler;
     vis.x = x;
     vis.y = y;
     vis.c = c;
     vis.width = vis.x.range()[1];
     vis.height = vis.y.range()[0];
+
+    vis.keys = [
+        "Asian",
+        "White",
+        "Black",
+        "Latino",
+        "Other"
+    ];
 
     vis.initVis();
 }
@@ -165,37 +166,28 @@ Tile.prototype.initVis = function() {
         .attr("class", "tile")
         .attr("width", vis.width)
         .attr("height", vis.height)
-        .style("fill-opacity", 0.3)
-        .attr("stroke", "black");
-
-    vis.parent.append("text")
-        .text(vis.data.state)
-        .style("font-size", "10px")
-        .attr("text-anchor", "start")
-        .attr("x", 5)
-        .attr("y", 10);
-
-    if (vis.data.hasData) {
-         vis.parent.select("rect.tile")
-             .style("fill", vis.c(vis.data.orderedKeys[vis.data.orderedKeys.length - 1]));
-
-        let pct_imprisoned_text = d3.format(".3%")(vis.data.pctImprisoned);
-
-        vis.parent.append("text")
-            .text(pct_imprisoned_text)
-            .style("font-size", "10px")
-            .attr("text-anchor", "start")
-            .attr("fill", "blue")
-            .attr("x", 5)
-            .attr("y", 22);
-    }
-
-    vis.area = d3.area()
-        .x0(d => vis.x(d.data.year))
-        .x1(d => vis.x(d.data.year))
-        .y0(d => vis.y(d[0]))
-        .y1(d => vis.y(d[1]))
-        .defined(d => d[0] !== d[1]);
+        .style("fill-opacity", 0.15)
+        .attr("stroke", "black")
+        .attr("fill", function() {
+            let maxRaceNum = -1;
+            let maxRaceKey = null;
+            vis.keys.forEach(function(k) {
+                let trueK = k + "TotalPrison";
+                if (vis.data[trueK] > maxRaceNum) {
+                    maxRaceNum = vis.data[trueK];
+                    maxRaceKey = k;
+                }
+            });
+            return vis.c(maxRaceKey);
+        })
+        .on("mouseover", function() {
+            $(vis.eventHandler).trigger("tileMouseOver", vis.data);
+            d3.select(this).style("fill-opacity", 0.3);
+        })
+        .on("mouseout", function() {
+            $(vis.eventHandler).trigger("tileMouseOut");
+            d3.select(this).style("fill-opacity", 0.15);
+        });
 
     vis.wrangleData();
 };
@@ -206,14 +198,46 @@ Tile.prototype.wrangleData = function() {
     vis.updateVis();
 };
 
-Tile.prototype.updateVis = function() {
+Tile.prototype.updateVis = function(race) {
     let vis = this;
 
-    vis.parent.selectAll("path.area")
-        .data(vis.data.values)
-        .enter()
-        .append("path")
-        .attr("class", "area")
-        .attr("d", vis.area)
-        .style("fill", d => vis.c(d.key));
+    let lines = vis.parent.selectAll("line.tile-line")
+        .data(vis.keys);
+
+    lines.enter()
+        .append("line")
+        .attr("class", "tile-line")
+        .attr("x1", vis.x("Total"))
+        .attr("x2", vis.x("Prison"))
+        .attr("y1", function(k) {
+            return vis.y(vis.data[k + "Total"] / vis.data["Total"]);
+        })
+        .attr("y2", function(k) {
+            return vis.y(vis.data[k + "TotalPrison"] / vis.data["TotalPrison"]);
+        })
+        .style("stroke", k => vis.c(k))
+        .style("stroke-width", 3)
+        .style("fill", "none")
+        .merge(lines)
+        .style("stroke-opacity", function(k) {
+            if (race) {
+                if (k === race) {
+                    return 1;
+                } else {
+                    return 0.2;
+                }
+            } else {
+                return 0.8;
+            }
+        });
+
+    if (vis.parent.selectAll("text").empty()) {
+        vis.parent.append("text")
+            .text(vis.data.GEOID)
+            .style("font-size", "10px")
+            .attr("text-anchor", "start")
+            .attr("x", 5)
+            .attr("y", 10);
+    }
 };
+
