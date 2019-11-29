@@ -1,3 +1,11 @@
+/**
+ * Walkthrough
+ * @param id: desired id for the div containing the walkthrough
+ * @param placeSelector: see "side" parameter
+ * @param side: "right" | "left" -- place walkthrough to right or left of HTML element specified by placeSelector
+ * @param text: initial text for walkthrough
+ * @param buttonText: initial text for button of walkthrough
+ */
 function Walkthrough(id, placeSelector, side, text, buttonText) {
     this.id = id;
     this.selector = ".walkthrough#" + this.id;
@@ -145,6 +153,19 @@ Walkthrough.prototype.setButtonText = function(text) {
     }
 };
 
+/**
+ * Walkthrough.prototype.addStep
+ * @param args: {
+ *     "placement": [placeSelector, side] -- as in initialization,
+ *     "text": str | null -- text to show for this step in the walkthrough,
+ *     "buttonText": button text to show for this step in the walkthrough,
+ *     "lock": true | false -- prevent user from scrolling during this step of the walkthrough,
+ *     "moveTo": str | null -- automatically scroll the page to this d3/jQuery selector (or do nothing),
+ *     "animate": true | false -- should the walkthrough div fade in/out,
+ *     "preFunc": function | null -- function to be called at the start of this step,
+ *     "postFunc": function | null -- function to be called at the end of this step (when the button is pressed again)
+ * }
+ */
 Walkthrough.prototype.addStep = function(args) {
     this.steps.push(args);
 };
