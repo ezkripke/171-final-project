@@ -6,10 +6,10 @@ function USLineVis(parent, data, eventHandler) {
     vis.eventHandler = eventHandler;
 
     vis.keys = [
-        "Asian",
+        "Latino",
         "White",
         "Black",
-        "Latino",
+        "Asian",
         "Other"
     ];
 
@@ -93,6 +93,7 @@ USLineVis.prototype.updateVis = function(stateData) {
     lines.enter()
         .append("line")
         .attr("class", "us-line")
+        .attr("id", d => d)
         .attr("x1", vis.x("Total"))
         .attr("x2", vis.x("Prison"))
         .attr("y1", function(k) {
@@ -143,4 +144,36 @@ USLineVis.prototype.onTileMouseOver = function(stateData) {
 
 USLineVis.prototype.onTileMouseOut = function() {
     this.updateVis();
+};
+
+USLineVis.prototype.highlightLine = function(id) {
+    let vis = this;
+
+    let lines = vis.svg.selectAll(".us-line")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .transition()
+        .duration(1000)
+        .style("stroke-opacity", function(d) {
+            if (d === id) {
+                return 1;
+            } else {
+                return 0.2;
+            }
+        });
+};
+
+USLineVis.prototype.unhighlightLine = function(id) {
+    let vis = this;
+
+    let lines = vis.svg.selectAll(".us-line")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .transition()
+        .duration(1000)
+        .style("stroke-opacity", 0.8);
 };

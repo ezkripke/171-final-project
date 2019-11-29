@@ -47,16 +47,16 @@ TileGridVis.prototype.initVis = function() {
 
     vis.tileX = d3.scaleOrdinal()
         .domain(["Total", "Prison"])
-        .range([0, vis.x.bandwidth()]);
+        .range([5, vis.x.bandwidth() - 5]);
     vis.tileY = d3.scaleLinear()
         .domain([0, 1])
-        .range([vis.y.bandwidth(), 0]);
+        .range([vis.y.bandwidth() - 5, 5]);
     vis.tileC = d3.scaleOrdinal()
         .domain([
-            "Asian",
+            "Latino",
             "White",
             "Black",
-            "Latino",
+            "Asian",
             "Other"
         ])
         .range(d3.schemeCategory10.slice(0, 5));
@@ -145,14 +145,14 @@ function Tile(parent, data, x, y, c, eventHandler) {
     vis.x = x;
     vis.y = y;
     vis.c = c;
-    vis.width = vis.x.range()[1];
-    vis.height = vis.y.range()[0];
+    vis.width = vis.x.range()[1] + 5;
+    vis.height = vis.y.range()[0] + 5;
 
     vis.keys = [
-        "Asian",
+        "Latino",
         "White",
         "Black",
-        "Latino",
+        "Asian",
         "Other"
     ];
 
@@ -239,5 +239,37 @@ Tile.prototype.updateVis = function(race) {
             .attr("x", 5)
             .attr("y", 10);
     }
+};
+
+Tile.prototype.highlightLine = function(id) {
+    let vis = this;
+
+    let lines = vis.parent.selectAll(".tile-line")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .transition()
+        .duration(1000)
+        .style("stroke-opacity", function(d) {
+            if (d === id) {
+                return 1;
+            } else {
+                return 0.2
+            }
+        });
+};
+
+Tile.prototype.unhighlightLine = function() {
+    let vis = this;
+
+    let lines = vis.parent.selectAll(".tile-line")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .transition()
+        .duration(1000)
+        .style("stroke-opacity", 0.8);
 };
 

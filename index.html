@@ -16,7 +16,7 @@
 		<h3>Amy Danoff, Samuel Lurye, Ethan Kripke</h3>
 		<h4>Harvard CS-171 Final Project</h4>
 	</div>
-	<div id="main">
+	<div id="main" class="container-fluid">
 
 		<div class="placeholder-text">
 			Text - Intro about problem, general stats, what this vis will show
@@ -26,14 +26,12 @@
 			Text - set up choropleth visualization
 		</div>
 
-		<div class="container-fluid">
-			<div class="row align-items-center">
-				<div class="col-sm-2"><p id="value-step"></p></div>
-				<div class="col-sm"><div id="slider-step"></div></div>
-			</div>
-			<div class="row">
-				<div id="map-chart"></div>
-			</div>
+		<div class="row align-items-center">
+			<div class="col-sm-2"><p id="value-step"></p></div>
+			<div class="col-sm"><div id="slider-step"></div></div>
+		</div>
+		<div class="row">
+			<div id="map-chart"></div>
 		</div>
 
 		<div class="placeholder-text">
@@ -44,14 +42,12 @@
 			Text - set up next small multiples line chart cartogram
 		</div>
 
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-8">
-					<div id="small-mult-area"></div>
-				</div>
-				<div class="col-md-4">
-					<div id="us-line-area"></div>
-				</div>
+		<div class="row">
+			<div class="col-md-8">
+				<div id="small-mult-area"></div>
+			</div>
+			<div class="col-md-4">
+				<div id="us-line-area"></div>
 			</div>
 		</div>
 
@@ -63,17 +59,15 @@
 			Text - set up bubble visualization
 		</div>
 
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-8">
-					<div id="bubble-area" class="bubble-vis"></div>
-				</div>
-				<div class="col-md-4">
-					<div id="bubble-choice-area">
-						<div class="form-group">
-							<label for="bubble-choice">State</label>
-							<select class="form-control" id="bubble-choice"></select>
-						</div>
+		<div class="row">
+			<div class="col-md-8">
+				<div id="bubble-area" class="bubble-vis"></div>
+			</div>
+			<div class="col-md-4">
+				<div id="bubble-choice-area">
+					<div class="form-group">
+						<label for="bubble-choice">State</label>
+						<select class="form-control" id="bubble-choice"></select>
 					</div>
 				</div>
 			</div>
@@ -101,6 +95,7 @@
 	<script src="js/tileGridVis.js"></script>
 	<script src="js/bubbleVis.js"></script>
 	<script src="js/choroplethMap.js"></script>
+	<script src="js/walkthrough.js"></script>
 	<script src="js/main.js"></script>
 	
 </body>
