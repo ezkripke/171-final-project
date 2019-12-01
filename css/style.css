@@ -19,9 +19,25 @@ body {
     width: 1080px;
 }
 
+.visualization-title {
+    margin: 30px auto;
+}
+
 .bubble-vis {
     margin-right: 20px;
     margin-left: 20px;
+    border: 1px solid white;
+}
+
+.bubble {
+    stroke: white;
+    stroke-width: 1.5px;
+}
+
+.node-label {
+    fill: white;
+    background-color: black;
+    font-size: 12px;
 }
 
 .placeholder-text {
