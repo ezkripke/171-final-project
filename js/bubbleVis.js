@@ -6,18 +6,51 @@
 BubbleVis = function(_parentElement, _data) {
     this.parentElement = _parentElement;
     this.data = _data;
-    this.nodes = [];
     this.races = ["Asian", "Black", "Latino", "Other", "White"];
-    this.initVis();
+    this.wrangleData();
+};
+
+BubbleVis.prototype.wrangleData = function() {
+    let vis = this;
+
+    // compute [r]Rate ∀(r ∈ this.races), add to new state entry
+    vis.data = vis.data.map(function(state) {
+        let newEntry = {
+            Name: state.Geography,
+            geo_ID: state.GEOID,
+            AsianPop: state.AsianTotal,
+            AsianPrison: state.AsianTotalPrison,
+            AsianRate: state.AsianTotalPrison / state.AsianTotal,
+            BlackPop: state.BlackTotal,
+            BlackPrison: state.BlackTotalPrison,
+            BlackRate: state.BlackTotalPrison / state.BlackTotal,
+            LatinoPop: state.LatinoTotal,
+            LatinoPrison: state.LatinoTotalPrison,
+            LatinoRate: state.LatinoTotalPrison / state.LatinoTotal,
+            WhitePop: state.WhiteTotal,
+            WhitePrison: state.WhiteTotalPrison,
+            WhiteRate: state.WhiteTotalPrison / state.WhiteTotal,
+            OtherPop: state.OtherTotal,
+            OtherPrison: state.OtherTotalPrison,
+            OtherRate: state.OtherTotalPrison / state.OtherTotal
+        };
+        let rates = vis.races.map(r => {return {race:r, rate:newEntry[r+'Rate']}});
+        let highest = rates.filter(r => r.rate === d3.max(rates, r=>r.rate))[0];
+        newEntry.HighestRateRace = highest.race;
+        newEntry.HighestRate = highest.rate;
+
+        return newEntry;
+    });
+    vis.initVis();
 };
 
 BubbleVis.prototype.initVis = function() {
     let vis = this;
-    console.log("BubbleVis::initVis");
 
+    // define drawing area
     vis.margin = { top: 40, right: 40, bottom: 40, left: 40 };
     vis.width = $(vis.parentElement).width()-(vis.margin.left+vis.margin.right);
-    vis.height = 500 - vis.margin.top - vis.margin.bottom;
+    vis.height = 600 - vis.margin.top - vis.margin.bottom;
 
     vis.svg = d3.select(vis.parentElement).append("svg")
         .attr("width", vis.width + vis.margin.left + vis.margin.right)
@@ -25,71 +58,48 @@ BubbleVis.prototype.initVis = function() {
         .append("g")
         .attr("transform", "translate(${vis.margin.left}, ${vis.margin.top})");
 
+    // init scales
+    vis.r = d3.scaleSqrt()
+        .domain(d3.extent(vis.data, d => d.HighestRate))
+        .range([10, 75]);
+
     vis.color = d3.scaleOrdinal()
         .domain(vis.races)
-        .range(d3.schemeSet1.slice(0, 5));
+        .range(colors);
 
+    // add legend using d3-legend lib
     vis.legend = d3.legendColor()
         .labels(vis.keys)
         .scale(vis.color);
-
     vis.svg.append("g")
         .attr("class", "legend")
-        .attr("transform", "translate(100, 150)")
-        .style("font-size", "13px");
-
+        .attr("transform", "translate(100,150)")
+        .style("font-size", "13px")
+        .style("fill", "white");
     vis.svg.select(".legend")
         .call(vis.legend);
-
-    let stateIDs = vis.data.map(d=>d.GEOID);
-    let s = "";
-    stateIDs.forEach(function(d) {
-        s += `<option value="${d}">${d}</option>`
-    });
-    document.getElementById("bubble-choice").innerHTML = s;
-
-    vis.wrangleData();
-};
-
-
-BubbleVis.prototype.wrangleData = function() {
-    let vis = this;
-    console.log("BubbleVis::wrangleData");
-    console.log(vis);
-
-    vis.selected = d3.select("#bubble-choice").property("value");
-    vis.nodes = [];
-    vis.state = vis.data.filter(e => e['GEOID'] === vis.selected)[0];
-
-    vis.races.forEach(function(r){
-        let numBubbles = Math.round(vis.state[r+'Rate']/100);
-        d3.range(0, numBubbles).forEach(_ => vis.nodes.push({race:r}));
-    });
 
     vis.updateVis();
 };
 
-
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
 
-    vis.force = d3.forceSimulation(vis.nodes)
-        .force('charge', d3.forceManyBody().strength(-2))
-        .force('center', d3.forceCenter(vis.width / 1.5, vis.height / 1.75));
+    vis.force = d3.forceSimulation(vis.data)
+        .force("x", d3.forceX(vis.width/1.75).strength(0.05))
+        .force("y", d3.forceY(vis.height/1.6).strength(0.05))
+        .force("c", d3.forceCollide(d => vis.r(d.HighestRate) + 1));
 
-    vis.bubbles = vis.svg.selectAll(".node")
-        .data(vis.nodes)
+    vis.bubbles = vis.svg.selectAll(".bubble")
+        .data(vis.data, d=> d.geo_ID)
         .enter()
         .append("circle")
-        .attr("class", "node")
-        .attr("r", 10)
-        .style("stroke-width", 1)
-        .style("stroke", "black")
-        .style("fill", d => vis.color(d.race));
+            .attr("class", "bubble")
+            .attr("r", d => vis.r(d.HighestRate))
+            .style("stroke", "white")
+            .style("fill", d => vis.color(d.HighestRateRace));
 
-    vis.force.on("tick", function() {
-        vis.bubbles
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
-    });
+    vis.bubbles.append("title").text(d=>d.Name);
+
+    vis.force.on("tick", _ => vis.bubbles.attr("cx", d=>d.x).attr("cy", d=>d.y))
 };

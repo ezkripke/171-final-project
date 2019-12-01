@@ -41,12 +41,10 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
     let eventHandler = {};
 
     let tileGridVis = new TileGridVis("#small-mult-area", raceData, eventHandler);
+
     let usLineVis = new USLineVis("#us-line-area", USData, eventHandler);
 
     let bubbleVis = new BubbleVis("#bubble-area", raceData);
-    d3.select("#bubble-choice").on("change", function() {
-        bubbleVis.wrangleData();
-    });
 
     let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson);
 
