@@ -6,18 +6,22 @@
 BubbleVis = function(_parentElement, _data) {
     this.parentElement = _parentElement;
     this.data = _data;
-    this.races = ["Asian", "Black", "Latino", "Other", "White"];
+    this.races = ["Asian", "Black", "Latino", "White", "Other"];
     this.wrangleData();
 };
 
 BubbleVis.prototype.wrangleData = function() {
     let vis = this;
+    vis.highestRate = 0;
+    vis.lowestRate = 1;
 
     // compute [r]Rate ∀(r ∈ this.races), add to new state entry
     vis.data = vis.data.map(function(state) {
         let newEntry = {
             Name: state.Geography,
             geo_ID: state.GEOID,
+            row: state.row,
+            col: state.col,
             AsianPop: state.AsianTotal,
             AsianPrison: state.AsianTotalPrison,
             AsianRate: state.AsianTotalPrison / state.AsianTotal,
@@ -34,10 +38,11 @@ BubbleVis.prototype.wrangleData = function() {
             OtherPrison: state.OtherTotalPrison,
             OtherRate: state.OtherTotalPrison / state.OtherTotal
         };
-        let rates = vis.races.map(r => {return {race:r, rate:newEntry[r+'Rate']}});
-        let highest = rates.filter(r => r.rate === d3.max(rates, r=>r.rate))[0];
-        newEntry.HighestRateRace = highest.race;
-        newEntry.HighestRate = highest.rate;
+        let rates = vis.races.map(r => newEntry[r+'Rate']);
+        let max = d3.max(rates);
+        let min = d3.min(rates);
+        if (vis.highestRate < d3.max(rates)) vis.highestRate = max;
+        if (vis.lowestRate > d3.min(rates)) vis.lowestRate = min;
 
         return newEntry;
     });
@@ -48,7 +53,7 @@ BubbleVis.prototype.initVis = function() {
     let vis = this;
 
     // define drawing area
-    vis.margin = { top: 40, right: 40, bottom: 40, left: 40 };
+    vis.margin = { top: 80, right: 0, bottom: 30, left: 80 };
     vis.width = $(vis.parentElement).width()-(vis.margin.left+vis.margin.right);
     vis.height = 650 - vis.margin.top - vis.margin.bottom;
 
@@ -56,67 +61,93 @@ BubbleVis.prototype.initVis = function() {
         .attr("width", vis.width + vis.margin.left + vis.margin.right)
         .attr("height", vis.height + vis.margin.top + vis.margin.bottom)
         .append("g")
-        .attr("transform", "translate(${vis.margin.left}, ${vis.margin.top})");
+        .attr("transform", `translate(${vis.margin.left}, ${vis.margin.top})`);
 
     // init scales
-    vis.r = d3.scaleSqrt()
-        .domain(d3.extent(vis.data, d => d.HighestRate))
-        .range([10, 80]);
+    vis.radius = d3.scaleSqrt()
+        .range([2, 37]);
+
+    vis.x = d3.scaleBand()
+        .domain(d3.range(
+            d3.min(vis.data, d => d.col),
+            d3.max(vis.data, d => d.col) + 1
+        ))
+        .range([0, vis.width])
+        .paddingInner(0.05);
+
+    vis.y = d3.scaleBand()
+        .domain(d3.range(
+            d3.min(vis.data, d => d.row),
+            d3.max(vis.data, d => d.row) + 1
+        ))
+        .range([0, vis.height])
+        .paddingInner(0.5);
 
     vis.color = d3.scaleOrdinal()
         .domain(vis.races)
         .range(colors);
 
-    // add legend using d3-legend lib
-    vis.legend = d3.legendColor()
-        .labels(vis.keys)
-        .scale(vis.color)
-        .shapePadding(20)
-        .shapeWidth(20)
-        .shapeHeight(20);
-    vis.svg.append("g")
-        .attr("class", "bubble-legend")
-        .attr("transform", "translate(25,25)")
-        .style("font-size", "18px")
-        .style("fill", "white");
-    vis.svg.select(".bubble-legend")
-        .call(vis.legend);
+    vis.svg.selectAll("text.bubble-race-choice")
+        .data(vis.races, d=>d)
+        .enter()
+        .append("text")
+        .attr("class", "bubble-race-choice")
+        .attr("text-anchor", "middle")
+        .attr("x", (_,i) => vis.width/2 + (vis.width/5)/2*i)
+        .attr("y", -40)
+        .style("fill", "white")
+        .text(d => d)
+        .on("mouseover", function() {
+            d3.select(this).style("fill", "blue");
+        })
+        .on("mouseout", function() {
+            d3.select(this).style("fill", "white");
+        })
+        .on("click", function(d){
+            vis.selectedRace = d;
+            vis.updateVis();
+        });
 
+    vis.selectedRace = "White";
     vis.updateVis();
 };
 
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
+    console.log(vis.selectedRace);
+    vis.radius.domain([vis.lowestRate, vis.highestRate]);
 
-    vis.force = d3.forceSimulation(vis.data)
-        .force("x", d3.forceX(vis.width/1.75).strength(0.05))
-        .force("y", d3.forceY(vis.height/1.7).strength(0.05))
-        .force("c", d3.forceCollide(d => vis.r(d.HighestRate) + 1))
-        .on("tick", tick);
+    vis.bubbles = vis.svg.selectAll(".bubble")
+        .data(vis.data, d => d.geo_ID);
 
-    vis.node = vis.svg.selectAll(".node")
-        .data(vis.data, d => d.geo_ID)
+    vis.bubbles
         .enter()
-        .append("g")
-        .attr("class", "node")
-        .attr("x", 500)
-        .attr("y", 500);
-
-    vis.node.append("circle")
+        .append("circle")
         .attr("class", "bubble")
-        .attr("r", d => vis.r(d.HighestRate))
-        .style("fill", d => vis.color(d.HighestRateRace));
+        .attr("cx", d => vis.x(d.col))
+        .attr("cy", d => vis.y(d.row))
+        .attr("r", 1e-6)
+        .merge(vis.bubbles)
+        .transition().duration(1000)
+        .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
+        .style("fill", vis.color(vis.selectedRace));
 
-    vis.node.append("text")
-        .attr("class", "node-label")
-        .attr("dx", "-0.6em")
-        .attr("dy", "0.2em")
-        .text(d => d.geo_ID);
+    vis.labels = vis.svg.selectAll(".state-id")
+        .data(vis.data);
 
-    function tick() {
-        vis.node
-            .attr("transform", d => "translate(" + d.x + "," + d.y + ")");
-    }
-
+    vis.labels
+        .enter()
+        .append("text")
+        .attr("class", "state-id")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("x", vis.width/2)
+        .attr("y", vis.height/2)
+        .merge(vis.labels)
+        .transition().duration(1000)
+        .attr("x", d => vis.x(d.col))
+        .attr("y", d => vis.y(d.row) + vis.radius(d[vis.selectedRace+'Rate'])+13)
+        .style("fill", "white")
+        .text(d => d.geo_ID)
 
 };

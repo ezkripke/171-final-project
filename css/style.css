@@ -31,7 +31,11 @@ body {
 
 .bubble {
     stroke: white;
-    stroke-width: 1.5px;
+    stroke-width: 1px;
+}
+
+.bubble-race-choice :hover {
+    fill: blue;
 }
 
 .node-label {
