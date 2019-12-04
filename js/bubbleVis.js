@@ -53,7 +53,7 @@ BubbleVis.prototype.initVis = function() {
     let vis = this;
 
     // define drawing area
-    vis.margin = { top: 80, right: 0, bottom: 30, left: 80 };
+    vis.margin = { top: 40, right: 100, bottom: 10, left: 40 };
     vis.width = $(vis.parentElement).width()-(vis.margin.left+vis.margin.right);
     vis.height = 650 - vis.margin.top - vis.margin.bottom;
 
@@ -65,6 +65,7 @@ BubbleVis.prototype.initVis = function() {
 
     // init scales
     vis.radius = d3.scaleSqrt()
+        .domain([vis.lowestRate, vis.highestRate])
         .range([2, 37]);
 
     vis.x = d3.scaleBand()
@@ -93,12 +94,12 @@ BubbleVis.prototype.initVis = function() {
         .append("text")
         .attr("class", "bubble-race-choice")
         .attr("text-anchor", "middle")
-        .attr("x", (_,i) => vis.width/2 + (vis.width/5)/2*i)
-        .attr("y", -40)
+        .attr("x", vis.width + 55)
+        .attr("y", (_,i) => (vis.height/15)*i)
         .style("fill", "white")
         .text(d => d)
         .on("mouseover", function() {
-            d3.select(this).style("fill", "blue");
+            d3.select(this).style("fill", "yellow");
         })
         .on("mouseout", function() {
             d3.select(this).style("fill", "white");
@@ -108,14 +109,34 @@ BubbleVis.prototype.initVis = function() {
             vis.updateVis();
         });
 
+    vis.svg.append("g")
+        .attr("class", "legendSize")
+        .attr("transform", `translate(${vis.width-20}, 300)`)
+        .style("stroke", "white")
+        .style("stroke-width", "1px");
+
+    vis.legendSize = d3.legendSize()
+        .scale(vis.radius)
+        .shape('circle')
+        .shapePadding(20)
+        .labelOffset(20)
+        .labelFormat(".2%");
+
+    vis.svg.select(".legendSize")
+        .call(vis.legendSize);
+
     vis.selectedRace = "White";
     vis.updateVis();
 };
 
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
-    console.log(vis.selectedRace);
-    vis.radius.domain([vis.lowestRate, vis.highestRate]);
+
+    // vis.tip = d3.tip()
+    //     .attr('class', 'd3-tip')
+    //     .html(function(d) {
+    //         console.log(d);
+    //     });
 
     vis.bubbles = vis.svg.selectAll(".bubble")
         .data(vis.data, d => d.geo_ID);
