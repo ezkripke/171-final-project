@@ -132,11 +132,13 @@ BubbleVis.prototype.initVis = function() {
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
 
-    // vis.tip = d3.tip()
-    //     .attr('class', 'd3-tip')
-    //     .html(function(d) {
-    //         console.log(d);
-    //     });
+    vis.tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .html(function(d) {
+            return `<h5>${d.Name}</h5>1 in ${Math.round(1/d[vis.selectedRace+'Rate'])} ${vis.selectedRace} people are incarcerated`
+        });
+
+    vis.svg.call(vis.tip);
 
     vis.bubbles = vis.svg.selectAll(".bubble")
         .data(vis.data, d => d.geo_ID);
@@ -148,6 +150,8 @@ BubbleVis.prototype.updateVis = function() {
         .attr("cx", d => vis.x(d.col))
         .attr("cy", d => vis.y(d.row))
         .attr("r", 1e-6)
+        .on("mouseover", vis.tip.show)
+        .on("mouseout", vis.tip.hide)
         .merge(vis.bubbles)
         .transition().duration(1000)
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
