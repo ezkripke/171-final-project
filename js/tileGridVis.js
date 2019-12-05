@@ -1,3 +1,6 @@
+// We copied the tile layout from the following site:
+// http://datavizcatalogue.com/blog/chart-combinations-tile-grid-maps/
+
 function TileGridVis(parent, data, eventHandler) {
     let vis = this;
 

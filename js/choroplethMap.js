@@ -21,7 +21,7 @@ MapVis.prototype.initVis = function() {
     // create SVG drawing area
     vis.margin = { top: 20, right: 20, bottom: 20, left: 20 };
     vis.width =  1000 - vis.margin.left - vis.margin.right;
-    vis.height = 700 - vis.margin.top - vis.margin.bottom;
+    vis.height = 650 - vis.margin.top - vis.margin.bottom;
 
     vis.svg = d3.select(vis.parentElement).append("svg")
         .attr("width", vis.width + vis.margin.left + vis.margin.right)
@@ -31,7 +31,7 @@ MapVis.prototype.initVis = function() {
 
     // Init projections
     vis.projection = d3.geoAlbersUsa()
-                .translate([vis.width / 2, vis.height / 2]) // translate to center of screen
+                .translate([vis.width / 1.8, vis.height / 2]) // translate to center of screen
                 .scale([1000]); // scale things down so see entire US
 
     // Create d3 geo path
@@ -44,10 +44,12 @@ MapVis.prototype.initVis = function() {
     });
 
     // Initialize tooltip
-    // https://bl.ocks.org/tiffylou/88f58da4599c9b95232f5c89a6321992
-    // vis.tooltip = d3.select("body").append("div")
-    //     .attr("class", "tooltip")
-    //     .style("opacity", 0);
+    // http://bl.ocks.org/lwhitaker3/e8090246a20d9515789b
+    vis.tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .offset([-5, 0])
+        .html(d => vis.getInfo(d));
+    vis.svg.call(vis.tip);
 
     // Index data by state abbreviation
     vis.abToName = {};
@@ -59,7 +61,6 @@ MapVis.prototype.initVis = function() {
             vis.abToName[currState.Code] = currState.State;
             vis.abToName[currState.State] = currState.Code;
         };
-        //console.log("abtoname", this.abToName);
 
         //console.log("abtoname2", this.abToName);
         vis.indexedData = {};
@@ -90,9 +91,8 @@ MapVis.prototype.initVis = function() {
         console.log("max val", maxVal);
 
         vis.color = d3.scaleQuantize()
-            .domain([0.0, (maxVal)])
-            .range(["rgb(237,248,233)", "rgb(186,228,179)",
-                "rgb(116,196,118)", "rgb(49,163,84)", "rgb(0,109,44)", "#013220"]);
+            .domain([0.0, (maxVal - 512)])
+            .range(['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']);
 
         // Convert topojson format
         // Help from https://bl.ocks.org/mbostock/4090848
@@ -106,7 +106,9 @@ MapVis.prototype.initVis = function() {
                 .enter()
                 .append("path")
                 .attr("d", vis.path)
-                .attr("fill", d => vis.updateColor(d));
+                .attr("fill", d => vis.updateColor(d))
+                .on('mouseover', vis.tip.show)
+                .on('mouseout', vis.tip.hide);
                 // .on("mouseover", function(d) {
                 //     vis.tooltip.html("hello" + "<br>")
                 //         .style("left", (d3.event.pageX) + "px")
@@ -139,6 +141,7 @@ MapVis.prototype.initVis = function() {
         .on('onchange', function(val) {
             vis.year = val.getFullYear().toString();
             //console.log("val", year);
+            d3.select('#value-scale').text(val.getFullYear().toString());
 
             vis.updateVis();
         });
@@ -160,7 +163,7 @@ MapVis.prototype.initVis = function() {
         })
         .attr("width", 18)
         .attr("height", 18)
-        .style("stroke", "black")
+        .style("stroke", "white")
         .style("stroke-width", 1)
         .style("fill", function(d){return d;});
 
@@ -175,6 +178,7 @@ MapVis.prototype.initVis = function() {
         })
         .attr("font-size", 10)
         .attr("dy", "0.9em") //place text one line *below* the x,y point
+        .attr("fill", "white")
         .text(function(d,i) {
             var extent = vis.color.invertExtent(d);
             //extent will be a two-element array, format it however you want:
@@ -187,10 +191,11 @@ MapVis.prototype.initVis = function() {
     // Append legend title
     vis.legendTitle = vis.svg
         .append("text")
-        .attr("x", vis.width - 195)
+        .attr("x", vis.width - 175)
         .attr("y", 430)
         .attr("font-size", 12)
         .attr("font-weight", "bold")
+        .attr("fill", "white")
         .text("People incarcerated (per 100,000)");
 
 
@@ -226,6 +231,7 @@ MapVis.prototype.updateColor = function(d) {
         if (stateData) {
             var prisonPop = +stateData[vis.year];
             if (prisonPop) {
+                //console.log("prisonpop", stateName, prisonPop);
                 //console.log("color", vis.color(prisonPop));
                 return vis.color(prisonPop);
             } else {
@@ -237,25 +243,24 @@ MapVis.prototype.updateColor = function(d) {
         }
 };
 
-// Three function that change the tooltip when user hover / move / leave a cell
-MapVis.prototype.mouseover = function() {
+MapVis.prototype.getInfo = function(d) {
     let vis = this;
 
-    vis.tooltip.style("opacity", 1)
-};
-
-MapVis.prototype.mousemove = function(d) {
-    let vis = this;
-
-    //console.log("hey plz", vis.tooltip);
-
-    vis.tooltip
-        .html("hello" + "<br>")
-        .style("left", (d3.event.pageX) + "px")
-        .style("top", (d3.event.pageY - 28) + "px");
-};
-
-MapVis.prototype.mouseleave = function() {
-    let vis = this;
-    vis.tooltip.style("opacity", 0)
+    var stateName = d.properties.name;
+    var stateCode = vis.abToName[stateName];
+    var stateData = vis.indexedData[stateCode];
+    //console.log("stateData", stateData);
+    if (stateData) {
+        var prisonPop = +stateData[vis.year];
+        if (prisonPop) {
+            //console.log("prisonpop", stateName, prisonPop);
+            //console.log("color", vis.color(prisonPop));
+            return stateCode + " Proportion Incarcerated:" + "<br>" + prisonPop + "/ 100,000";
+        } else {
+            return "N/A"
+        }
+    } else {
+        //console.log("else");
+        return "N/A";
+    }
 };

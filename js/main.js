@@ -3,7 +3,7 @@ let colors = [
     "#7A07E6",
     "#00C7C0",
     "#CC0701",
-    "#E0C200",
+    "#E0C200"
 ];
 
 let guideSelector = "#guide";

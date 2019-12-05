@@ -19,7 +19,7 @@ function USLineVis(parent, data, eventHandler) {
 USLineVis.prototype.initVis = function() {
     let vis = this;
 
-    vis.margin = {"top": 30, "left": 50, "right": 100, "bottom": 30};
+    vis.margin = {"top": 30, "left": 50, "right": 100, "bottom": 60};
 
     let width = vis.parent.node().getBoundingClientRect().width;
     let height = d3.select("#small-mult-area").node().getBoundingClientRect().height;
@@ -75,6 +75,13 @@ USLineVis.prototype.initVis = function() {
         .attr("x", vis.width)
         .attr("y", vis.height + 20);
 
+    vis.svg.append("text")
+        .attr("class", "us-line-title")
+        .attr("x", vis.width / 2)
+        .attr("text-anchor", "middle")
+        .style("font-size", "15px")
+        .text("US National Data");
+
     vis.wrangleData();
 };
 
@@ -87,33 +94,8 @@ USLineVis.prototype.wrangleData = function() {
 USLineVis.prototype.updateVis = function(stateData) {
     let vis = this;
 
-    let lines = vis.svg.selectAll("line.us-line")
-        .data(vis.keys);
-
-    lines.enter()
-        .append("line")
-        .attr("class", "us-line")
-        .attr("id", d => d)
-        .attr("x1", vis.x("Total"))
-        .attr("x2", vis.x("Prison"))
-        .attr("y1", function(k) {
-            return vis.y(vis.data[k + "Total"] / vis.data["Total"]);
-        })
-        .attr("y2", function(k) {
-            return vis.y(vis.data[k + "TotalPrison"] / vis.data["TotalPrison"]);
-        })
-        .style("stroke", k => vis.c(k))
-        .style("stroke-width", 3)
-        .style("stroke-opacity", 0.8)
-        .style("stroke-dasharray", "4 4")
-        .on("mouseover", function(k) {
-            d3.select(this).style("stroke-dasharray", "none");
-            $(vis.eventHandler).trigger("USLineMouseOver", k);
-        })
-        .on("mouseout", function() {
-            d3.select(this).style("stroke-dasharray", "4 4");
-            $(vis.eventHandler).trigger("USLineMouseOut");
-        });
+    vis.makeLines("us-line");
+    vis.makeLines("us-line-invis");
 
     if (!stateData) {
         vis.svg.selectAll("line.state-line").remove();
@@ -163,6 +145,13 @@ USLineVis.prototype.highlightLine = function(id) {
                 return 0.2;
             }
         });
+
+    lines = vis.svg.selectAll(".us-line-invis")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .attr("pointer-events", "none");
 };
 
 USLineVis.prototype.unhighlightLine = function(id) {
@@ -176,4 +165,58 @@ USLineVis.prototype.unhighlightLine = function(id) {
         .transition()
         .duration(1000)
         .style("stroke-opacity", 0.8);
+
+    lines = vis.svg.selectAll(".us-line-invis")
+        .data(vis.keys);
+
+    lines.enter()
+        .merge(lines)
+        .attr("pointer-events", "all");
+};
+
+USLineVis.prototype.makeLines = function(type) {
+    let vis = this;
+
+    let lines = vis.svg.selectAll("line." + type)
+        .data(vis.keys);
+
+    let selection = lines.enter()
+        .append("line")
+        .attr("class", type)
+        .attr("id", d => d + "-" + type)
+        .attr("x1", vis.x("Total"))
+        .attr("x2", vis.x("Prison"))
+        .attr("y1", function(k) {
+            return vis.y(vis.data[k + "Total"] / vis.data["Total"]);
+        })
+        .attr("y2", function(k) {
+            return vis.y(vis.data[k + "TotalPrison"] / vis.data["TotalPrison"]);
+        })
+        .style("stroke", k => vis.c(k))
+        .style("stroke-width", 3)
+        .style("stroke-opacity", function() {
+            if (type === "us-line") {
+                return 0.8;
+            } else {
+                return 0;
+            }
+        })
+        .style("stroke-dasharray", function() {
+            if (type === "us-line") {
+                return "4 4";
+            } else {
+                return null;
+            }
+        });
+
+        if (type === "us-line-invis") {
+            selection.on("mouseover", function(k) {
+                d3.select(this).style("stroke-opacity", 1);
+                $(vis.eventHandler).trigger("USLineMouseOver", k);
+            })
+            .on("mouseout", function() {
+                d3.select(this).style("stroke-opacity", 0);
+                $(vis.eventHandler).trigger("USLineMouseOut");
+            });
+        }
 };
