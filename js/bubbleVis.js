@@ -65,8 +65,9 @@ BubbleVis.prototype.initVis = function() {
 
     // init scales
     vis.radius = d3.scaleSqrt()
-        .domain([vis.lowestRate, vis.highestRate])
-        .range([2, 37]);
+        // .domain([vis.lowestRate, vis.highestRate])
+        .domain([0, vis.highestRate])
+        .range([0, 40]);
 
     vis.x = d3.scaleBand()
         .domain(d3.range(
@@ -88,39 +89,66 @@ BubbleVis.prototype.initVis = function() {
         .domain(vis.races)
         .range(colors);
 
+    vis.totalPopScale = d3.scaleLog()
+        .range([vis.height, 0]);
+
+    vis.incarceratedPopScale = d3.scaleLinear()
+        .range([0, vis.width]);
+
+    // init choice marker
+    vis.svg
+        .append("rect")
+        .attr("class", "choice-marker")
+        .attr("width", "45")
+        .attr("height", "2")
+        .attr("x", 900.5)
+        .attr("y", 125)
+        .style("fill", "white");
+
+    // select race option
     vis.svg.selectAll("text.bubble-race-choice")
         .data(vis.races, d=>d)
         .enter()
         .append("text")
-        .attr("class", "bubble-race-choice")
+        .attr("class", (_,i) => `bubble-race-choice, choice-${i}`)
         .attr("text-anchor", "middle")
         .attr("x", vis.width + 55)
         .attr("y", (_,i) => (vis.height/15)*i)
         .style("fill", "white")
         .text(d => d)
         .on("mouseover", function() {
-            d3.select(this).style("fill", "yellow");
+            d3.select(this)
+                .style("fill", "yellow")
+                .style("cursor", "pointer");
         })
         .on("mouseout", function() {
-            d3.select(this).style("fill", "white");
+            d3.select(this)
+                .style("fill", "white")
         })
-        .on("click", function(d){
+        .on("click", function(d,i){
             vis.selectedRace = d;
+            console.log(vis.width + 32.5, (vis.height/15)*i + 5);
+            vis.svg.select(".choice-marker")
+                .transition().duration(400)
+                .attr("x", vis.width + 32.5)
+                .attr("y", (vis.height/15)*i + 5);
             vis.updateVis();
         });
 
+    // legend
     vis.svg.append("g")
         .attr("class", "legendSize")
-        .attr("transform", `translate(${vis.width-20}, 300)`)
+        .attr("transform", `translate(${vis.width-15}, 270)`)
         .style("stroke", "white")
         .style("stroke-width", "1px");
 
     vis.legendSize = d3.legendSize()
         .scale(vis.radius)
         .shape('circle')
-        .shapePadding(20)
+        .cells([.005, .01, .02, .04, .08])
+        .shapePadding(30)
         .labelOffset(20)
-        .labelFormat(".2%");
+        .labelFormat(".1%");
 
     vis.svg.select(".legendSize")
         .call(vis.legendSize);
@@ -132,11 +160,14 @@ BubbleVis.prototype.initVis = function() {
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
 
+    // update scales for rosling-chart view
+    vis.totalPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace+'Pop'])]);
+    vis.incarceratedPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace+'Prison'])]);
+
+    // tooltip
     vis.tip = d3.tip()
         .attr('class', 'd3-tip')
-        .html(function(d) {
-            return `<h5>${d.Name}</h5>1 in ${Math.round(1/d[vis.selectedRace+'Rate'])} ${vis.selectedRace} people are incarcerated`
-        });
+        .html(d => `<h5>${d.Name}</h5>1 in ${Math.round(1/d[vis.selectedRace+'Rate'])} ${vis.selectedRace} people are incarcerated`);
 
     vis.svg.call(vis.tip);
 
@@ -150,8 +181,13 @@ BubbleVis.prototype.updateVis = function() {
         .attr("cx", d => vis.x(d.col))
         .attr("cy", d => vis.y(d.row))
         .attr("r", 1e-6)
-        .on("mouseover", vis.tip.show)
-        .on("mouseout", vis.tip.hide)
+        .on("mouseover", function(d) {
+            vis.tip.show(d);
+            d3.select(this).style("cursor", "pointer");
+        })
+        .on("mouseout", function(d) {
+            vis.tip.hide(d);
+        })
         .merge(vis.bubbles)
         .transition().duration(1000)
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
@@ -168,11 +204,16 @@ BubbleVis.prototype.updateVis = function() {
         .attr("font-size", "12px")
         .attr("x", vis.width/2)
         .attr("y", vis.height/2)
+        .on("mouseover", function(d) {
+            vis.tip.show(d);
+            d3.select(this).style("cursor", "pointer");
+        })
+        .on("mouseout", vis.tip.hide)
         .merge(vis.labels)
         .transition().duration(1000)
         .attr("x", d => vis.x(d.col))
         .attr("y", d => vis.y(d.row) + vis.radius(d[vis.selectedRace+'Rate'])+13)
         .style("fill", "white")
-        .text(d => d.geo_ID)
+        .text(d => d.geo_ID);
 
 };
