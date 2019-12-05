@@ -41,7 +41,7 @@ USLineVis.prototype.initVis = function() {
         .range([vis.height, 0]);
     vis.c = d3.scaleOrdinal()
         .domain(vis.keys)
-        .range(d3.schemeCategory10.slice(0, 5));
+        .range(colors);
 
     vis.leftAxis = vis.svg.append("g")
         .attr("class", "axis left-axis")
