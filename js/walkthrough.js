@@ -46,6 +46,10 @@ Walkthrough.prototype.update = function(args) {
 
     let wt = this;
 
+    $(window).resize(function() {
+        wt.place.apply(wt, placement);
+    });
+
     d3.select(wt.buttonSelector)
         .on("mousedown", null);
 
@@ -90,15 +94,17 @@ Walkthrough.prototype.update = function(args) {
 };
 
 Walkthrough.prototype.place = function(selector, side) {
-    let offset = $(selector).offset();
+    let ref = $(selector);
     let guide = $(this.selector);
+
+    let offset = ref.offset();
 
     if (side === "right") {
         guide.css("top", offset.top)
             .css("left", offset.left + this.getWidth(selector) + 20);
     } else {
         guide.css("top", offset.top)
-            .css("left", offset.left - this.getWidth(this.selector) - 20);
+            .css("left", Math.max(offset.left - this.getWidth(this.selector) - 20, 0));
     }
 };
 
@@ -115,9 +121,9 @@ Walkthrough.prototype.moveTo = function(selector) {
 
 Walkthrough.prototype.lockScroll = function(lock) {
     if (lock) {
-        $("html").css("overflow", "hidden");
+        $("html").css("overflow-y", "hidden");
     } else {
-        $("html").css("overflow", "scroll");
+        $("html").css("overflow-y", "scroll");
     }
 };
 

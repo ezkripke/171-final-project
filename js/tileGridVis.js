@@ -1,3 +1,6 @@
+// We copied the tile layout from the following site:
+// http://datavizcatalogue.com/blog/chart-combinations-tile-grid-maps/
+
 function TileGridVis(parent, data, eventHandler) {
     let vis = this;
 
@@ -59,7 +62,7 @@ TileGridVis.prototype.initVis = function() {
             "Asian",
             "Other"
         ])
-        .range(d3.schemeCategory10.slice(0, 5));
+        .range(colors);
 
     vis.svg.append("g")
         .attr("class", "legend")

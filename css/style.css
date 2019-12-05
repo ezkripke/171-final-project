@@ -19,8 +19,13 @@ body {
     width: 1080px;
 }
 
+#map-chart {
+    margin: auto;
+}
+
 .visualization-title {
     margin: 30px auto;
+    text-align: center;
 }
 
 .bubble-vis {
@@ -86,11 +91,20 @@ div.tooltip {
     font-size: 15px;
     padding: 20px;
     max-width: 250px;
+    color: black;
 }
 
 .walkthrough-button {
     margin: auto;
     display: block;
+    color: white;
+}
+
+#tile-grid-row {
+    border-radius: 3px;
+    background-color: white;
+    box-shadow: 0px 5px 10px 0px rgba(0,0,0,0.5);
+    padding: 40px;
 }
 
 h4 {

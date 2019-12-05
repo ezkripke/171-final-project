@@ -1,9 +1,9 @@
 let colors = [
-    "#53881f",
-    "#311178",
-    "#af118c",
-    "#850500",
-    "#00716e"
+    "#37C200",
+    "#7A07E6",
+    "#00C7C0",
+    "#CC0701",
+    "#E0C200"
 ];
 
 let guideSelector = "#guide";
@@ -70,14 +70,14 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
 function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
     let wt = new Walkthrough(
         "tile-grid-walkthrough",
-        "#us-line-area",
+        "#tile-grid-row",
         "right",
         null,
         "Begin Guide"
     );
 
     wt.addStep({
-        "placement": ["#us-line-area", "right"],
+        "placement": ["#tile-grid-row", "right"],
         "text": "The line chart to the left shows " +
             "<i>nation-wide</i> data. The left axis " +
             "shows the percentage of the US population " +
@@ -85,13 +85,13 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
             "shows the percentage of the total US incarcerated " +
             "population made up by a given race.",
         "buttonText": "Continue",
-        "moveTo": "#small-mult-area",
+        "moveTo": "#tile-grid-row",
         "lock": true,
         "animate": true
     });
 
     wt.addStep({
-        "placement": ["#small-mult-area", "left"],
+        "placement": ["#tile-grid-row", "left"],
         "text": "Each tile to the right corresponds to a state. Within " +
             "each tile is the same kind of line chart showing data for that " +
             "specific state. The background color for each tile corresponds to the " +
@@ -102,7 +102,7 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
     });
 
     wt.addStep({
-        "placement": ["#small-mult-area", "left"],
+        "placement": ["#tile-grid-row", "left"],
         "text": "Hover over a state to compare its data to the " +
             "nation-wide statistics.",
         "buttonText": "Continue",
@@ -111,7 +111,7 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
     });
 
     wt.addStep({
-        "placement": ["#us-line-area", "right"],
+        "placement": ["#tile-grid-row", "right"],
         "text": "Hover over a line to highlight that race across every state.",
         "buttonText": "Continue",
         "lock": true,
@@ -119,7 +119,7 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
     });
 
     wt.addStep({
-        "placement": ["#us-line-area", "right"],
+        "placement": ["#tile-grid-row", "right"],
         "text": "While white people make up about 65% of " +
             "the US population, they make up only 40% of the " +
             "incarcerated population. Note that in <i>every</i> state, " +
@@ -138,7 +138,7 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
     });
 
     wt.addStep({
-        "placement": ["#us-line-area", "right"],
+        "placement": ["#tile-grid-row", "right"],
         "text": "Meanwhile, while black people make up about 12% of the " +
             "US population, they make up approximately 40% of the incarcerated " +
             "population. Note that in <i>every</i> state, black people are " +
