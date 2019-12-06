@@ -236,7 +236,8 @@ BubbleVis.prototype.updateVis = function() {
         .html(function(d) {
             let r = vis.selectedRace;
             let f = Math.round(1/d[vis.selectedRace+'Rate']);
-            let s = `<h5>${d.Name}</h5>
+            let p = d3.format(".02%")(d[vis.selectedRace+'Rate']);
+            let s = `<h4>${d.Name} (${p})</h4>
                     1 in ${f} ${r} people are incarcerated`;
             if (vis.rosling) {
                 return `<p>${s}</p> <p>${r} population: ${d3.format(",")(d[r+'Pop'])} </p>
@@ -264,18 +265,21 @@ BubbleVis.prototype.updateVis = function() {
                 .enter()
                 .append("text")
                 .attr("class", "percentage-point-diff")
-                .attr("x", e => vis.x(e.col) - 20)
-                .attr("y", e => vis.y(e.row))
+                .attr("x", e => vis.x(e.col) - 25)
+                .attr("y", function(e) {
+                    if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
+                    else if (vis.selectedRace === "Black") return vis.y(e.row);
+                    else return vis.y(e.row) - 20;
+                })
                 .style("fill", function(e) {
                     if (d[vis.selectedRace+'Rate']-e[vis.selectedRace+'Rate'] < 0) {
-                        return "green";
+                        return "lightgreen";
                     }
                     else return "red";
                 })
                 .text(function(e) {
                     let disp = (d[vis.selectedRace+'Rate'] - e[vis.selectedRace+'Rate']) * 100;
-                    if (disp > 0) return "+"+d3.format(".2f")(disp);
-                    else return d3.format(".2f")(disp);
+                    return d3.format("+.2f")(disp);
                 });
 
 
@@ -305,7 +309,6 @@ BubbleVis.prototype.updateVis = function() {
             else return vis.y(d.row);
         })
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
-        .style("fill", "darkgrey");//vis.color(vis.selectedRace));
 
     vis.labels = vis.svg.selectAll(".state-id")
         .data(vis.data);

@@ -37,6 +37,7 @@ body {
 .bubble {
     stroke: white;
     stroke-width: 0.75px;
+    fill: #2c2c2c;
 }
 
 .x-axis-bubble {
