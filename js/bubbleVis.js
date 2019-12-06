@@ -14,6 +14,8 @@ BubbleVis.prototype.wrangleData = function() {
     let vis = this;
     vis.highestRate = 0;
     vis.lowestRate = 1;
+    vis.highestPop = 0;
+    vis.highestPrison = 0;
 
     // compute [r]Rate ∀(r ∈ this.races), add to new state entry
     vis.data = vis.data.map(function(state) {
@@ -38,11 +40,21 @@ BubbleVis.prototype.wrangleData = function() {
             OtherPrison: state.OtherTotalPrison,
             OtherRate: state.OtherTotalPrison / state.OtherTotal
         };
+
+        // calculate absolute maxes/mins for use in scales/axes later
         let rates = vis.races.map(r => newEntry[r+'Rate']);
-        let max = d3.max(rates);
-        let min = d3.min(rates);
-        if (vis.highestRate < d3.max(rates)) vis.highestRate = max;
-        if (vis.lowestRate > d3.min(rates)) vis.lowestRate = min;
+        let pops = vis.races.map(r => newEntry[r+'Pop']);
+        let prison = vis.races.map(r => newEntry[r+'Prison']);
+
+        let maxRate = d3.max(rates);
+        let minRate = d3.min(rates);
+        let maxPop = d3.max(pops);
+        let maxPrison = d3.max(prison);
+
+        if (vis.highestRate < maxRate) vis.highestRate = maxRate;
+        if (vis.lowestRate > minRate) vis.lowestRate = minRate;
+        if (vis.highestPop < maxPop) vis.highestPop = maxPop;
+        if (vis.highestPrison < maxPrison) vis.highestPrison = maxPrison;
 
         return newEntry;
     });
@@ -51,6 +63,7 @@ BubbleVis.prototype.wrangleData = function() {
 
 BubbleVis.prototype.initVis = function() {
     let vis = this;
+
 
     // define drawing area
     vis.margin = { top: 40, right: 100, bottom: 10, left: 40 };
@@ -62,6 +75,7 @@ BubbleVis.prototype.initVis = function() {
         .attr("height", vis.height + vis.margin.top + vis.margin.bottom)
         .append("g")
         .attr("transform", `translate(${vis.margin.left}, ${vis.margin.top})`);
+
 
     // init scales
     vis.radius = d3.scaleSqrt()
@@ -89,11 +103,11 @@ BubbleVis.prototype.initVis = function() {
         .domain(vis.races)
         .range(colors);
 
-    vis.totalPopScale = d3.scaleLog()
-        .range([vis.height, 0]);
+    vis.totalPopScale = d3.scaleLinear()
+        .range([vis.height - 50, 30]);
 
     vis.incarceratedPopScale = d3.scaleLinear()
-        .range([0, vis.width]);
+        .range([30, vis.width - 125]);
 
     // init choice marker
     vis.svg
@@ -135,6 +149,45 @@ BubbleVis.prototype.initVis = function() {
             vis.updateVis();
         });
 
+    vis.svg
+        .append("text")
+        .attr("class", "bubble-view-choice")
+        .attr("text-anchor", "middle")
+        .attr("x", vis.width + 30)
+        .attr("y", vis.height/3 + 18)
+        .style("fill", "lightblue")
+        .style("font-size", "18px")
+        .text("Change View")
+        .on("mouseover", function() {
+            d3.select(this)
+                .style("fill", "yellow")
+                .style("cursor", "pointer");
+        })
+        .on("mouseout", function() {
+            d3.select(this)
+                .style("fill", "lightblue")
+        })
+        .on("click", function() {
+            vis.rosling = !vis.rosling;
+            if (vis.rosling) {
+                vis.svg.select(".x-axis-bubble")
+                    .transition().duration(800)
+                    .attr("transform", `translate(0, ${vis.height - 50})`);
+                vis.svg.select(".y-axis-bubble")
+                    .transition().duration(800)
+                    .attr("transform", "translate(30, 0)");
+            }
+            else {
+                vis.svg.select(".x-axis-bubble")
+                    .transition().duration(800)
+                    .attr("transform", `translate(-1000, ${vis.height - 50})`);
+                vis.svg.select(".y-axis-bubble")
+                    .transition().duration(800)
+                    .attr("transform", "translate(-1000, 0)");
+            }
+            vis.updateVis();
+        });
+
     // legend
     vis.svg.append("g")
         .attr("class", "legendSize")
@@ -153,22 +206,45 @@ BubbleVis.prototype.initVis = function() {
     vis.svg.select(".legendSize")
         .call(vis.legendSize);
 
+    // update scales/axes for rosling-chart view
+    vis.incarceratedPopScale.domain([0, vis.highestPrison]);
+    vis.xAxis = d3.axisBottom(vis.incarceratedPopScale);
+    vis.svg.append("g")
+        .attr("class", "x-axis-bubble")
+        .attr("transform", `translate(0, ${vis.height - 50})`)
+        .call(vis.xAxis);
+
+    vis.totalPopScale.domain([0, vis.highestPop]);
+    vis.yAxis = d3.axisLeft(vis.totalPopScale);
+    vis.svg.append("g")
+        .attr("class", "y-axis-bubble")
+        .attr("transform", "translate(30, 0)")
+        .call(vis.yAxis);
+
+
     vis.selectedRace = "White";
+    vis.rosling = true;
     vis.updateVis();
 };
 
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
 
-    // update scales for rosling-chart view
-    vis.totalPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace+'Pop'])]);
-    vis.incarceratedPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace+'Prison'])]);
-
     // tooltip
     vis.tip = d3.tip()
         .attr('class', 'd3-tip')
-        .html(d => `<h5>${d.Name}</h5>1 in ${Math.round(1/d[vis.selectedRace+'Rate'])} ${vis.selectedRace} people are incarcerated`);
+        .html(function(d) {
+            let r = vis.selectedRace;
+            let f = Math.round(1/d[vis.selectedRace+'Rate']);
+            let s = `<h5>${d.Name}</h5>
+                    1 in ${f} ${r} people are incarcerated`;
+            if (vis.rosling) {
+                return `<p>${s}</p> <p>${r} population: ${d3.format(",")(d[r+'Pop'])} </p>
+                          <p> ${r} incarcerated population: ${d3.format(",")(d[r+'Prison'])} </p>`;
+            }
+            else return s;
 
+        });
     vis.svg.call(vis.tip);
 
     vis.bubbles = vis.svg.selectAll(".bubble")
@@ -178,20 +254,58 @@ BubbleVis.prototype.updateVis = function() {
         .enter()
         .append("circle")
         .attr("class", "bubble")
-        .attr("cx", d => vis.x(d.col))
-        .attr("cy", d => vis.y(d.row))
         .attr("r", 1e-6)
         .on("mouseover", function(d) {
             vis.tip.show(d);
-            d3.select(this).style("cursor", "pointer");
+            d3.select(this)
+                .style("cursor", "pointer");
+            vis.svg.selectAll("text.percentage-point-diff")
+                .data(vis.data, e => e.geo_ID)
+                .enter()
+                .append("text")
+                .attr("class", "percentage-point-diff")
+                .attr("x", e => vis.x(e.col) - 20)
+                .attr("y", e => vis.y(e.row))
+                .style("fill", function(e) {
+                    if (d[vis.selectedRace+'Rate']-e[vis.selectedRace+'Rate'] < 0) {
+                        return "green";
+                    }
+                    else return "red";
+                })
+                .text(function(e) {
+                    let disp = (d[vis.selectedRace+'Rate'] - e[vis.selectedRace+'Rate']) * 100;
+                    if (disp > 0) return "+"+d3.format(".2f")(disp);
+                    else return d3.format(".2f")(disp);
+                });
+
+
         })
         .on("mouseout", function(d) {
             vis.tip.hide(d);
+            vis.svg.selectAll("text.percentage-point-diff").remove();
         })
         .merge(vis.bubbles)
         .transition().duration(1000)
+        .attr("fill-opacity", function(d) {
+            if (vis.rosling) {
+                return 0.5;
+            }
+            else return 1;
+        })
+        .attr("cx", function(d) {
+            if (vis.rosling) {
+                return vis.incarceratedPopScale(d[vis.selectedRace+'Prison']);
+            }
+            else return vis.x(d.col);
+        })
+        .attr("cy", function(d) {
+            if (vis.rosling) {
+                return vis.totalPopScale(d[vis.selectedRace+'Pop']);
+            }
+            else return vis.y(d.row);
+        })
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
-        .style("fill", vis.color(vis.selectedRace));
+        .style("fill", "darkgrey");//vis.color(vis.selectedRace));
 
     vis.labels = vis.svg.selectAll(".state-id")
         .data(vis.data);
@@ -208,11 +322,18 @@ BubbleVis.prototype.updateVis = function() {
             vis.tip.show(d);
             d3.select(this).style("cursor", "pointer");
         })
-        .on("mouseout", vis.tip.hide)
+        .on("mouseout", function(d) {
+            vis.tip.hide(d)
+        })
         .merge(vis.labels)
         .transition().duration(1000)
         .attr("x", d => vis.x(d.col))
-        .attr("y", d => vis.y(d.row) + vis.radius(d[vis.selectedRace+'Rate'])+13)
+        .attr("y", function(d) {
+            if (!vis.rosling) {
+                return vis.y(d.row) + vis.radius(d[vis.selectedRace + 'Rate']) + 13;
+            }
+            else return 1000;
+        })
         .style("fill", "white")
         .text(d => d.geo_ID);
 

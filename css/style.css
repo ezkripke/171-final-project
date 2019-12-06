@@ -39,6 +39,24 @@ body {
     stroke-width: 0.75px;
 }
 
+.x-axis-bubble {
+    stroke: white;
+}
+
+.x-axis-bubble line,
+.x-axis-bubble path,
+.x-axis-bubble,
+.y-axis-bubble line,
+.y-axis-bubble path,
+.y-axis-bubble{
+    stroke: white;
+}
+
+.percentage-point-diff {
+    font-weight: bolder;
+    font-size: 20px;
+}
+
 .node-label {
     fill: white;
     background-color: black;
