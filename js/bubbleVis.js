@@ -115,7 +115,7 @@ BubbleVis.prototype.initVis = function() {
         .attr("class", "choice-marker")
         .attr("width", "45")
         .attr("height", "2")
-        .attr("x", 900.5)
+        .attr("x", 970.5)
         .attr("y", 125)
         .style("fill", "white");
 
@@ -141,7 +141,6 @@ BubbleVis.prototype.initVis = function() {
         })
         .on("click", function(d,i){
             vis.selectedRace = d;
-            console.log(vis.width + 32.5, (vis.height/15)*i + 5);
             vis.svg.select(".choice-marker")
                 .transition().duration(400)
                 .attr("x", vis.width + 32.5)
@@ -149,6 +148,7 @@ BubbleVis.prototype.initVis = function() {
             vis.updateVis();
         });
 
+    // change view button to toggle between rosling chart and cartogram
     vis.svg
         .append("text")
         .attr("class", "bubble-view-choice")
@@ -168,7 +168,28 @@ BubbleVis.prototype.initVis = function() {
                 .style("fill", "lightblue")
         })
         .on("click", function() {
+            vis.toggleCount += 1;
             vis.rosling = !vis.rosling;
+            if (vis.toggleCount === 1) {
+                // update scales/axes for rosling-chart view
+                vis.incarceratedPopScale.domain([0, vis.highestPrison]);
+                vis.xAxis = d3.axisBottom(vis.incarceratedPopScale);
+                vis.svg.append("g")
+                    .attr("class", "x-axis-bubble")
+                    .attr("transform", `translate(-1000, ${vis.height - 50})`)
+                    .transition().duration(800)
+                    .attr("transform", `translate(0, ${vis.height - 50})`)
+                    .call(vis.xAxis);
+
+                vis.totalPopScale.domain([0, vis.highestPop]);
+                vis.yAxis = d3.axisLeft(vis.totalPopScale);
+                vis.svg.append("g")
+                    .attr("class", "y-axis-bubble")
+                    .attr("transform", "translate(-1000, 0)")
+                    .transition().duration(800)
+                    .attr("transform", "translate(30, 0)")
+                    .call(vis.yAxis);
+            }
             if (vis.rosling) {
                 vis.svg.select(".x-axis-bubble")
                     .transition().duration(800)
@@ -206,24 +227,12 @@ BubbleVis.prototype.initVis = function() {
     vis.svg.select(".legendSize")
         .call(vis.legendSize);
 
-    // update scales/axes for rosling-chart view
-    vis.incarceratedPopScale.domain([0, vis.highestPrison]);
-    vis.xAxis = d3.axisBottom(vis.incarceratedPopScale);
-    vis.svg.append("g")
-        .attr("class", "x-axis-bubble")
-        .attr("transform", `translate(0, ${vis.height - 50})`)
-        .call(vis.xAxis);
 
-    vis.totalPopScale.domain([0, vis.highestPop]);
-    vis.yAxis = d3.axisLeft(vis.totalPopScale);
-    vis.svg.append("g")
-        .attr("class", "y-axis-bubble")
-        .attr("transform", "translate(30, 0)")
-        .call(vis.yAxis);
 
 
     vis.selectedRace = "White";
-    vis.rosling = true;
+    vis.rosling = false;
+    vis.toggleCount = 0;
     vis.updateVis();
 };
 
@@ -260,25 +269,30 @@ BubbleVis.prototype.updateVis = function() {
             vis.tip.show(d);
             d3.select(this)
                 .style("cursor", "pointer");
+            if (vis.rosling) return;
             vis.svg.selectAll("text.percentage-point-diff")
                 .data(vis.data, e => e.geo_ID)
                 .enter()
                 .append("text")
                 .attr("class", "percentage-point-diff")
                 .attr("x", e => vis.x(e.col) - 25)
+                .attr("y", e => vis.y(e.row) + 10)
+                .attr("fill-opacity", 0)
+                .transition().duration(300)
+                .attr("fill-opacity", 1)
                 .attr("y", function(e) {
                     if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
                     else if (vis.selectedRace === "Black") return vis.y(e.row);
                     else return vis.y(e.row) - 20;
                 })
                 .style("fill", function(e) {
-                    if (d[vis.selectedRace+'Rate']-e[vis.selectedRace+'Rate'] < 0) {
+                    if (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate'] < 0) {
                         return "lightgreen";
                     }
                     else return "red";
                 })
                 .text(function(e) {
-                    let disp = (d[vis.selectedRace+'Rate'] - e[vis.selectedRace+'Rate']) * 100;
+                    let disp = (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate']) * 100;
                     return d3.format("+.2f")(disp);
                 });
 
@@ -286,7 +300,11 @@ BubbleVis.prototype.updateVis = function() {
         })
         .on("mouseout", function(d) {
             vis.tip.hide(d);
-            vis.svg.selectAll("text.percentage-point-diff").remove();
+            vis.svg.selectAll("text.percentage-point-diff")
+                .transition().duration(300)
+                .attr("y", e => vis.y(e.row))
+                .attr("fill-opacity", 0)
+                .remove();
         })
         .merge(vis.bubbles)
         .transition().duration(1000)
@@ -308,7 +326,7 @@ BubbleVis.prototype.updateVis = function() {
             }
             else return vis.y(d.row);
         })
-        .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']))
+        .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']));
 
     vis.labels = vis.svg.selectAll(".state-id")
         .data(vis.data);
@@ -324,9 +342,40 @@ BubbleVis.prototype.updateVis = function() {
         .on("mouseover", function(d) {
             vis.tip.show(d);
             d3.select(this).style("cursor", "pointer");
+            if (vis.rosling) return;
+            vis.svg.selectAll("text.percentage-point-diff")
+                .data(vis.data, e => e.geo_ID)
+                .enter()
+                .append("text")
+                .attr("class", "percentage-point-diff")
+                .attr("x", e => vis.x(e.col) - 25)
+                .attr("y", e => vis.y(e.row) + 10)
+                .attr("fill-opacity", 0)
+                .transition().duration(300)
+                .attr("fill-opacity", 1)
+                .attr("y", function(e) {
+                    if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
+                    else if (vis.selectedRace === "Black") return vis.y(e.row);
+                    else return vis.y(e.row) - 20;
+                })
+                .style("fill", function(e) {
+                    if (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate'] < 0) {
+                        return "lightgreen";
+                    }
+                    else return "red";
+                })
+                .text(function(e) {
+                    let disp = (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate']) * 100;
+                    return d3.format("+.2f")(disp);
+                });
         })
         .on("mouseout", function(d) {
-            vis.tip.hide(d)
+            vis.tip.hide(d);
+            vis.svg.selectAll("text.percentage-point-diff")
+                .transition().duration(300)
+                .attr("y", e => vis.y(e.row))
+                .attr("fill-opacity", 0)
+                .remove();
         })
         .merge(vis.labels)
         .transition().duration(1000)
