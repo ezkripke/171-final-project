@@ -73,7 +73,7 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
     $(eventHandler2).bind("selectionChanged", function(event, year){
         //console.log("yearr", year);
         // Call event for age vis
-        //mapLineVis.onSelectionChange(year);
+        mapLineVis.moveCircle(year);
        // ageVis.onSelectionChange(rangeStart, rangeEnd);
         // Call event for prio vis
         //prioVis.onSelectionChange(rangeStart, rangeEnd);

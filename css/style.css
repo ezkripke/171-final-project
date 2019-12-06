@@ -131,3 +131,15 @@ h5 {
     color: #fff;
     border-radius: 2px;
 }
+
+.axisWhite line{
+    stroke: white;
+}
+
+.axisWhite path{
+    stroke: white;
+}
+
+.axisWhite text{
+    fill: white;
+}

@@ -31,8 +31,8 @@ MapVis.prototype.initVis = function() {
 
     // Init projections
     vis.projection = d3.geoAlbersUsa()
-                .translate([vis.width / 2, vis.height / 2]) // translate to center of screen
-                .scale([850]); // scale things down so see entire US
+                .translate([vis.width / 2.3, vis.height / 2]) // translate to center of screen
+                .scale([800]); // scale things down so see entire US
 
     // Create d3 geo path
     vis.path = d3.geoPath()
@@ -141,7 +141,7 @@ MapVis.prototype.initVis = function() {
         .on('onchange', function(val) {
             vis.year = val.getFullYear().toString();
             //console.log("val", year);
-            d3.select('#value-scale').text(val.getFullYear().toString());
+            //d3.select('#value-scale').text(val.getFullYear().toString());
 
             // 3. Trigger the event 'selectionChanged' of our event handler
             $(vis.eventHandler).trigger("selectionChanged", val.getFullYear().toString());
