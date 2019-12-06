@@ -2,15 +2,15 @@
 /**
  * Choropleth Map
  * @param _parentElement 	-- the HTML element in which to draw the map vis
- * @param _data			    -- the dataset incarceration_trends_clean.csv
  */
-MapVis = function(_parentElement, _data, _abbrevData, _stateJson) {
+MapVis = function(_parentElement, _data, _abbrevData, _stateJson, _eventHandler) {
     this.parentElement = _parentElement;
     this.data = _data;
     this.filteredData = this.data;
     this.abbrevData = _abbrevData;
     this.stateJson = _stateJson;
     this.year = "1998";
+    this.eventHandler = _eventHandler;
 
     this.initVis();
 };
@@ -31,8 +31,8 @@ MapVis.prototype.initVis = function() {
 
     // Init projections
     vis.projection = d3.geoAlbersUsa()
-                .translate([vis.width / 1.8, vis.height / 2]) // translate to center of screen
-                .scale([1000]); // scale things down so see entire US
+                .translate([vis.width / 2.3, vis.height / 2]) // translate to center of screen
+                .scale([800]); // scale things down so see entire US
 
     // Create d3 geo path
     vis.path = d3.geoPath()
@@ -141,10 +141,20 @@ MapVis.prototype.initVis = function() {
         .on('onchange', function(val) {
             vis.year = val.getFullYear().toString();
             //console.log("val", year);
-            d3.select('#value-scale').text(val.getFullYear().toString());
+            //d3.select('#value-scale').text(val.getFullYear().toString());
+
+            // 3. Trigger the event 'selectionChanged' of our event handler
+            $(vis.eventHandler).trigger("selectionChanged", val.getFullYear().toString());
 
             vis.updateVis();
         });
+
+    // 4. Bind event handler
+    // when 'selectionChanged' is triggered, specified function is called
+    $(vis.eventHandler).bind("selectionChanged", function(event, year){
+       // vis.selectionChanged(year);
+        //vis.zoomFunction()
+    });
 
     var gTime = vis.svg
         .append('g')
@@ -157,9 +167,9 @@ MapVis.prototype.initVis = function() {
 
     vis.legend.enter()
         .append('rect')
-        .attr("x", vis.width - 110)
+        .attr("x", 10)
         .attr("y", function(d, i) {
-            return i * 18 + 450;
+            return i * 18 + 150;
         })
         .attr("width", 18)
         .attr("height", 18)
@@ -172,9 +182,9 @@ MapVis.prototype.initVis = function() {
         .data(vis.color.range().reverse())
         .enter()
         .append('text')
-        .attr("x", vis.width - 85) //leave 5 pixel space after the <rect>
+        .attr("x", 35) //leave 5 pixel space after the <rect>
         .attr("y", function(d, i) {
-            return i * 19 + 450;
+            return i * 19 + 150;
         })
         .attr("font-size", 10)
         .attr("dy", "0.9em") //place text one line *below* the x,y point
@@ -191,12 +201,22 @@ MapVis.prototype.initVis = function() {
     // Append legend title
     vis.legendTitle = vis.svg
         .append("text")
-        .attr("x", vis.width - 175)
-        .attr("y", 430)
+        .attr("x", 1)
+        .attr("y", 125)
         .attr("font-size", 12)
         .attr("font-weight", "bold")
         .attr("fill", "white")
-        .text("People incarcerated (per 100,000)");
+        .text("People incarcerated");
+
+    // Append legend title 2
+    vis.legendTitle2 = vis.svg
+        .append("text")
+        .attr("x", 1)
+        .attr("y", 140)
+        .attr("font-size", 12)
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text("(per 100,000)");
 
 
     gTime.call(sliderTime);
@@ -263,4 +283,8 @@ MapVis.prototype.getInfo = function(d) {
         //console.log("else");
         return "N/A";
     }
+};
+
+MapVis.prototype.selectionChanged = function(year){
+    console.log("year", year)
 };

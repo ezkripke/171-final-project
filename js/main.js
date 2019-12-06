@@ -40,13 +40,17 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
 
     let eventHandler = {};
 
+    let eventHandler2 = {};
+
     let tileGridVis = new TileGridVis("#small-mult-area", raceData, eventHandler);
 
     let usLineVis = new USLineVis("#us-line-area", USData, eventHandler);
 
     let bubbleVis = new BubbleVis("#bubble-area", raceData);
 
-    let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson);
+    let mapVis = new MapVis("#map-chart", stateData, stateAbbrevs, stateJson, eventHandler2);
+
+    let mapLineVis = new MapLineVis("#map-line-area", stateData);
 
     setUpTileGridWalkthrough(usLineVis, tileGridVis);
 
@@ -64,6 +68,15 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
 
     $(eventHandler).bind("USLineMouseOut", function() {
         tileGridVis.onUSLineMouseOut();
+    });
+
+    $(eventHandler2).bind("selectionChanged", function(event, year){
+        //console.log("yearr", year);
+        // Call event for age vis
+        mapLineVis.moveCircle(year);
+       // ageVis.onSelectionChange(rangeStart, rangeEnd);
+        // Call event for prio vis
+        //prioVis.onSelectionChange(rangeStart, rangeEnd);
     });
 }
 
