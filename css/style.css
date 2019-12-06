@@ -47,7 +47,7 @@ body {
 
 .placeholder-text {
     margin: 20px 20px;
-    padding: 100px 20px;
+    padding: 40px 20px;
 }
 
 #choropleth-area {
@@ -107,7 +107,7 @@ div.tooltip {
     padding: 40px;
 }
 
-h4 {
+h5 {
     margin-left: 280px;
     fill: white;
     font-size: small;
@@ -115,13 +115,12 @@ h4 {
 }
 
 .value-scale {
-    margin-left: 520px;
     display: inline-block;
     width: 50px;
     border: 1px solid #6c757d;
     text-align: center;
-    margin-bottom: 0px;
-    margin-top: 10px;
+    margin-left: 60px;
+    margin-bottom: 530px;
 }
 
 /* http://bl.ocks.org/lwhitaker3/e8090246a20d9515789b */
