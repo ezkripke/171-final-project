@@ -65,8 +65,9 @@ body {
 }
 
 .placeholder-text {
+    background-color: white;
     margin: 20px 20px;
-    padding: 40px 20px;
+    padding: 20px 10px;
 }
 
 #choropleth-area {
@@ -161,4 +162,9 @@ h5 {
 
 .axisWhite text{
     fill: white;
+}
+
+.text-main {
+    color: black;
+    padding-bottom: 0px;
 }

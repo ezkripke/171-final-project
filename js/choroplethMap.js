@@ -31,7 +31,7 @@ MapVis.prototype.initVis = function() {
 
     // Init projections
     vis.projection = d3.geoAlbersUsa()
-                .translate([vis.width / 2.3, vis.height / 2]) // translate to center of screen
+                .translate([vis.width / 2.3, vis.height / 1.85]) // translate to center of screen
                 .scale([800]); // scale things down so see entire US
 
     // Create d3 geo path
@@ -149,11 +149,20 @@ MapVis.prototype.initVis = function() {
             vis.updateVis();
         });
 
+    // Append label for year
+    vis.yearLabel = vis.svg.append("text")
+        .attr("fill", "white")
+        .attr("x", vis.width/2)
+        .attr("y", 110)
+        .attr("font-size", 20)
+        .attr("font-weight", "bold")
+        .text("1998");
     // 4. Bind event handler
     // when 'selectionChanged' is triggered, specified function is called
     $(vis.eventHandler).bind("selectionChanged", function(event, year){
        // vis.selectionChanged(year);
         //vis.zoomFunction()
+        vis.yearLabel.text(year);
     });
 
     var gTime = vis.svg
