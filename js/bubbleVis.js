@@ -191,7 +191,7 @@ BubbleVis.prototype.initVis = function() {
                     .attr("transform", "translate(-1000, 0)")
                     .transition().duration(800)
                     .attr("transform", "translate(30, 0)")
-                    .call(vis.yAxis);
+                    .call(vis.yAxis.ticks(7));
 
                 // add axis titles to axis groups
                 vis.svg.select(".x-axis-bubble")
@@ -276,7 +276,7 @@ BubbleVis.prototype.updateVis = function() {
         vis.svg.select("g.y-axis-bubble")
             .attr("transform", "translate(30, 0)")
             .transition().duration(800)
-            .call(vis.yAxis);
+            .call(vis.yAxis.ticks(7));
     }
 
 

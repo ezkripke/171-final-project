@@ -170,3 +170,9 @@ h5 {
     color: black;
     padding-bottom: 1px;
 }
+
+.data-source {
+    text-align: left;
+    color: darkgray;
+    font-style: italic;
+}
