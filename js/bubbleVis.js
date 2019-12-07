@@ -368,14 +368,17 @@ BubbleVis.prototype.updateVis = function() {
                     .transition().duration(300)
                     .attr("fill-opacity", 1)
                     .attr("y", function (e) {
-                        if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
-                        else if (vis.selectedRace === "Black") return vis.y(e.row)+5;
-                        else return vis.y(e.row) - 20;
+                        if (vis.selectedRace !== "Black") return vis.y(e.row) - vis.radius(e[vis.selectedRace+'Rate']) - 5;
+                        else return vis.y(e.row)+5;
                     })
                     .style("fill", function (e) {
-                        if (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate'] < 0) {
+                        let disp = (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate']) * 100;
+                        let fmt = d3.format("+.2f")(disp);
+                        if (fmt < 0) {
                             return "lightgreen";
-                        } else return "red";
+                        }
+                        else if (fmt === "+0.00") return "gray";
+                        else return "red";
                     })
                     .text(function (e) {
                         let disp = (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate']) * 100;

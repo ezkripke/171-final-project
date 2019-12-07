@@ -1,6 +1,6 @@
 let colors = [
     "#37c200", // Asian
-    "#0004e6", // Black
+    "#00027e", // Black
     "#009d97", // Latino
     "#CC0701", // White
     "#d633ad"  // Other
