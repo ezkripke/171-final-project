@@ -62,7 +62,7 @@ TileGridVis.prototype.initVis = function() {
             "Asian",
             "Other"
         ])
-        .range(colors);
+        .range(d3.schemeCategory10.slice(0, 5));
 
     vis.svg.append("g")
         .attr("class", "legend")
