@@ -299,7 +299,7 @@ BubbleVis.prototype.updateVis = function() {
     vis.svg.call(vis.tip);
 
 
-    // enter-merge loop for bubbles
+    // enter-merge loop for bubbles, including hover -> tooltip
     vis.bubbles = vis.svg.selectAll(".bubble")
         .data(vis.data, d => d.geo_ID);
     vis.bubbles
@@ -309,42 +309,10 @@ BubbleVis.prototype.updateVis = function() {
         .attr("r", 1e-6)
         .on("mouseover", function(d) {
             vis.tip.show(d);
-            d3.select(this)
-                .style("cursor", "pointer");
-            if (vis.rosling) return;
-            vis.svg.selectAll("text.percentage-point-diff")
-                .data(vis.data, e => e.geo_ID)
-                .enter()
-                .append("text")
-                .attr("class", "percentage-point-diff")
-                .attr("x", e => vis.x(e.col) - 25)
-                .attr("y", e => vis.y(e.row) + 10)
-                .attr("fill-opacity", 0)
-                .transition().duration(300)
-                .attr("fill-opacity", 1)
-                .attr("y", function(e) {
-                    if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
-                    else if (vis.selectedRace === "Black") return vis.y(e.row);
-                    else return vis.y(e.row) - 20;
-                })
-                .style("fill", function(e) {
-                    if (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate'] < 0) {
-                        return "lightgreen";
-                    }
-                    else return "red";
-                })
-                .text(function(e) {
-                    let disp = (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate']) * 100;
-                    return d3.format("+.2f")(disp);
-                });
+            d3.select(this).style("cursor", "pointer");
         })
         .on("mouseout", function(d) {
             vis.tip.hide(d);
-            vis.svg.selectAll("text.percentage-point-diff")
-                .transition().duration(300)
-                .attr("y", e => vis.y(e.row))
-                .attr("fill-opacity", 0)
-                .remove();
         })
         .merge(vis.bubbles)
         .transition().duration(1000)
@@ -369,7 +337,7 @@ BubbleVis.prototype.updateVis = function() {
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']));
 
 
-    // enter-merge loop for labels
+    // enter-merge loop for labels, including hover -> percentage point differentials
     vis.labels = vis.svg.selectAll(".state-id")
         .data(vis.data);
     vis.labels
@@ -381,37 +349,35 @@ BubbleVis.prototype.updateVis = function() {
         .attr("x", vis.width/2)
         .attr("y", vis.height/2)
         .on("mouseover", function(d) {
-            vis.tip.show(d);
             d3.select(this).style("cursor", "pointer");
-            if (vis.rosling) return;
-            vis.svg.selectAll("text.percentage-point-diff")
-                .data(vis.data, e => e.geo_ID)
-                .enter()
-                .append("text")
-                .attr("class", "percentage-point-diff")
-                .attr("x", e => vis.x(e.col) - 25)
-                .attr("y", e => vis.y(e.row) + 10)
-                .attr("fill-opacity", 0)
-                .transition().duration(300)
-                .attr("fill-opacity", 1)
-                .attr("y", function(e) {
-                    if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
-                    else if (vis.selectedRace === "Black") return vis.y(e.row);
-                    else return vis.y(e.row) - 20;
-                })
-                .style("fill", function(e) {
-                    if (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate'] < 0) {
-                        return "lightgreen";
-                    }
-                    else return "red";
-                })
-                .text(function(e) {
-                    let disp = (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate']) * 100;
-                    return d3.format("+.2f")(disp);
-                });
+            if (!vis.rosling) {
+                vis.svg.selectAll("text.percentage-point-diff")
+                    .data(vis.data, e => e.geo_ID)
+                    .enter()
+                    .append("text")
+                    .attr("class", "percentage-point-diff")
+                    .attr("x", e => vis.x(e.col) - 25)
+                    .attr("y", e => vis.y(e.row) + 10)
+                    .attr("fill-opacity", 0)
+                    .transition().duration(300)
+                    .attr("fill-opacity", 1)
+                    .attr("y", function (e) {
+                        if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
+                        else if (vis.selectedRace === "Black") return vis.y(e.row);
+                        else return vis.y(e.row) - 20;
+                    })
+                    .style("fill", function (e) {
+                        if (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate'] < 0) {
+                            return "lightgreen";
+                        } else return "red";
+                    })
+                    .text(function (e) {
+                        let disp = (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate']) * 100;
+                        return d3.format("+.2f")(disp);
+                    });
+            }
         })
         .on("mouseout", function(d) {
-            vis.tip.hide(d);
             vis.svg.selectAll("text.percentage-point-diff")
                 .transition().duration(300)
                 .attr("y", e => vis.y(e.row))
