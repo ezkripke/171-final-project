@@ -77,12 +77,14 @@ BubbleVis.prototype.initVis = function() {
         .attr("transform", `translate(${vis.margin.left}, ${vis.margin.top})`);
 
 
-    // init scales
+    // init scales //
+
+    // radius scale for bubbles
     vis.radius = d3.scaleSqrt()
-        // .domain([vis.lowestRate, vis.highestRate])
         .domain([0, vis.highestRate])
         .range([0, 40]);
 
+    // row/col scales for cartogram placement
     vis.x = d3.scaleBand()
         .domain(d3.range(
             d3.min(vis.data, d => d.col),
@@ -99,27 +101,24 @@ BubbleVis.prototype.initVis = function() {
         .range([0, vis.height])
         .paddingInner(0.5);
 
-    vis.color = d3.scaleOrdinal()
-        .domain(vis.races)
-        .range(colors);
-
+    // scales for rosling-view axes
     vis.totalPopScale = d3.scaleLinear()
         .range([vis.height - 50, 30]);
 
     vis.incarceratedPopScale = d3.scaleLinear()
         .range([30, vis.width - 125]);
 
-    // init choice marker
+    // init choice marker for race-selection
     vis.svg
         .append("rect")
         .attr("class", "choice-marker")
         .attr("width", "45")
         .attr("height", "2")
-        .attr("x", 970.5)
+        .attr("x", 970.5) // 'White' coordinates (initial choice)
         .attr("y", 125)
         .style("fill", "white");
 
-    // select race option
+    // race selection
     vis.svg.selectAll("text.bubble-race-choice")
         .data(vis.races, d=>d)
         .enter()
@@ -168,37 +167,52 @@ BubbleVis.prototype.initVis = function() {
                 .style("fill", "lightblue")
         })
         .on("click", function() {
-            vis.toggleCount += 1;
             vis.rosling = !vis.rosling;
-            if (vis.toggleCount === 1) {
-                // update scales/axes for rosling-chart view
-                vis.incarceratedPopScale.domain([0, vis.highestPrison]);
+
+            if (vis.rosling) {
+                // creation of axes and transition by toggle button when toggling to rosling-view
+                // necessary to have both intra-rosling race-based axis tick transitions and inter-view axis sliding animation
+                vis.justToggled = true;
+
+                // update scales an axes
+                vis.incarceratedPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace + 'Prison'])]);
                 vis.xAxis = d3.axisBottom(vis.incarceratedPopScale);
-                vis.svg.append("g")
-                    .attr("class", "x-axis-bubble")
+                vis.totalPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace + 'Pop'])]);
+                vis.yAxis = d3.axisLeft(vis.totalPopScale);
+
+                // slide in axes
+                vis.svg.select("g.x-axis-bubble")
                     .attr("transform", `translate(-1000, ${vis.height - 50})`)
                     .transition().duration(800)
                     .attr("transform", `translate(0, ${vis.height - 50})`)
                     .call(vis.xAxis);
 
-                vis.totalPopScale.domain([0, vis.highestPop]);
-                vis.yAxis = d3.axisLeft(vis.totalPopScale);
-                vis.svg.append("g")
-                    .attr("class", "y-axis-bubble")
+                vis.svg.select("g.y-axis-bubble")
                     .attr("transform", "translate(-1000, 0)")
                     .transition().duration(800)
                     .attr("transform", "translate(30, 0)")
                     .call(vis.yAxis);
-            }
-            if (vis.rosling) {
+
+                // add axis titles to axis groups
                 vis.svg.select(".x-axis-bubble")
-                    .transition().duration(800)
-                    .attr("transform", `translate(0, ${vis.height - 50})`);
+                    .append("text")
+                    .attr("x", vis.width - 125)
+                    .attr("y", -10)
+                    .attr("text-anchor", "end")
+                    .style("font-size", "15px")
+                    .text("Incarcerated Population");
+
                 vis.svg.select(".y-axis-bubble")
-                    .transition().duration(800)
-                    .attr("transform", "translate(30, 0)");
+                    .append("text")
+                    .attr("x", 0)
+                    .attr("y", 20)
+                    .attr("text-anchor", "start")
+                    .style("font-size", "15px")
+                    .text("Total Race Population");
             }
+
             else {
+                // on toggle back to state/cartogram view, slide axes out
                 vis.svg.select(".x-axis-bubble")
                     .transition().duration(800)
                     .attr("transform", `translate(-1000, ${vis.height - 50})`);
@@ -206,6 +220,8 @@ BubbleVis.prototype.initVis = function() {
                     .transition().duration(800)
                     .attr("transform", "translate(-1000, 0)");
             }
+
+            // update vis on toggle
             vis.updateVis();
         });
 
@@ -227,9 +243,11 @@ BubbleVis.prototype.initVis = function() {
     vis.svg.select(".legendSize")
         .call(vis.legendSize);
 
+    // init axis groups
+    vis.svg.append("g").attr("class", "x-axis-bubble");
+    vis.svg.append("g").attr("class", "y-axis-bubble");
 
-
-
+    // initial conditions
     vis.selectedRace = "White";
     vis.rosling = false;
     vis.toggleCount = 0;
@@ -239,7 +257,30 @@ BubbleVis.prototype.initVis = function() {
 BubbleVis.prototype.updateVis = function() {
     let vis = this;
 
-    // tooltip
+    // transition axes unless rosling-view was just toggled (in which case it's handled by the toggler)
+    // needed to do it this way to be able to have axis ticks transition as well as axes sliding in on toggle
+    if (vis.justToggled) {
+        vis.justToggled = false;
+    }
+    else if (vis.rosling) {
+        console.log("hello");
+        vis.incarceratedPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace + 'Prison'])]);
+        vis.xAxis = d3.axisBottom(vis.incarceratedPopScale);
+        vis.svg.select("g.x-axis-bubble")
+            .attr("transform", `translate(0, ${vis.height - 50})`)
+            .transition().duration(800)
+            .call(vis.xAxis);
+
+        vis.totalPopScale.domain([0, d3.max(vis.data, d => d[vis.selectedRace + 'Pop'])]);
+        vis.yAxis = d3.axisLeft(vis.totalPopScale);
+        vis.svg.select("g.y-axis-bubble")
+            .attr("transform", "translate(30, 0)")
+            .transition().duration(800)
+            .call(vis.yAxis);
+    }
+
+
+    // compute tooltip values for current conditions and setup tooltip
     vis.tip = d3.tip()
         .attr('class', 'd3-tip')
         .html(function(d) {
@@ -257,9 +298,10 @@ BubbleVis.prototype.updateVis = function() {
         });
     vis.svg.call(vis.tip);
 
+
+    // enter-merge loop for bubbles
     vis.bubbles = vis.svg.selectAll(".bubble")
         .data(vis.data, d => d.geo_ID);
-
     vis.bubbles
         .enter()
         .append("circle")
@@ -295,8 +337,6 @@ BubbleVis.prototype.updateVis = function() {
                     let disp = (e[vis.selectedRace+'Rate'] - d[vis.selectedRace+'Rate']) * 100;
                     return d3.format("+.2f")(disp);
                 });
-
-
         })
         .on("mouseout", function(d) {
             vis.tip.hide(d);
@@ -310,7 +350,7 @@ BubbleVis.prototype.updateVis = function() {
         .transition().duration(1000)
         .attr("fill-opacity", function(d) {
             if (vis.rosling) {
-                return 0.5;
+                return 0.7;
             }
             else return 1;
         })
@@ -328,9 +368,10 @@ BubbleVis.prototype.updateVis = function() {
         })
         .attr("r", d => vis.radius(d[vis.selectedRace+'Rate']));
 
+
+    // enter-merge loop for labels
     vis.labels = vis.svg.selectAll(".state-id")
         .data(vis.data);
-
     vis.labels
         .enter()
         .append("text")

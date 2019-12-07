@@ -65,7 +65,7 @@ body {
     font-size: 12px;
 }
 
-.placeholder-text {
+.text-area {
     background-color: white;
     margin: 20px 20px;
     padding: 20px 10px;
@@ -168,5 +168,5 @@ h5 {
 
 .text-main {
     color: black;
-    padding-bottom: 0px;
+    padding-bottom: 1px;
 }
