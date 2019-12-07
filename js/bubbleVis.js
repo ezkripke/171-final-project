@@ -84,6 +84,11 @@ BubbleVis.prototype.initVis = function() {
         .domain([0, vis.highestRate])
         .range([0, 40]);
 
+    // color scale (to be consistent with previous vis, bubbles colored by race)
+    vis.color = d3.scaleOrdinal()
+        .domain(vis.races)
+        .range(colors);
+
     // row/col scales for cartogram placement
     vis.x = d3.scaleBand()
         .domain(d3.range(
@@ -316,6 +321,7 @@ BubbleVis.prototype.updateVis = function() {
         })
         .merge(vis.bubbles)
         .transition().duration(1000)
+        .attr("fill", vis.color(vis.selectedRace))
         .attr("fill-opacity", function(d) {
             if (vis.rosling) {
                 return 0.7;

@@ -1,9 +1,9 @@
 let colors = [
-    "#37C200",
-    "#7A07E6",
-    "#00C7C0",
-    "#CC0701",
-    "#E0C200"
+    "#37c200", // Asian
+    "#0004e6", // Black
+    "#009d97", // Latino
+    "#CC0701", // White
+    "#d633ad"  // Other
 ];
 
 let guideSelector = "#guide";
