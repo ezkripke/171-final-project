@@ -76,6 +76,14 @@ TileGridVis.prototype.initVis = function() {
     vis.svg.select(".legend")
         .call(legend);
 
+    vis.svg.append("text")
+        .attr("class", "tile-grid-title")
+        .attr("x", vis.width / 2)
+        .attr("y", 20)
+        .attr("text-anchor", "middle")
+        .style("font-size", "15px")
+        .text("State by State Data");
+
     vis.wrangleData();
 };
 
