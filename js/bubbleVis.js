@@ -356,14 +356,14 @@ BubbleVis.prototype.updateVis = function() {
                     .enter()
                     .append("text")
                     .attr("class", "percentage-point-diff")
-                    .attr("x", e => vis.x(e.col) - 25)
+                    .attr("x", e => vis.x(e.col) - 28)
                     .attr("y", e => vis.y(e.row) + 10)
                     .attr("fill-opacity", 0)
                     .transition().duration(300)
                     .attr("fill-opacity", 1)
                     .attr("y", function (e) {
                         if (vis.selectedRace === "Asian") return vis.y(e.row) - 15;
-                        else if (vis.selectedRace === "Black") return vis.y(e.row);
+                        else if (vis.selectedRace === "Black") return vis.y(e.row)+5;
                         else return vis.y(e.row) - 20;
                     })
                     .style("fill", function (e) {
