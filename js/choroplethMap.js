@@ -31,8 +31,8 @@ MapVis.prototype.initVis = function() {
 
     // Init projections
     vis.projection = d3.geoAlbersUsa()
-                .translate([vis.width / 2.3, vis.height / 1.85]) // translate to center of screen
-                .scale([800]); // scale things down so see entire US
+                .translate([vis.width / 2.6, vis.height / 1.85]) // translate to center of screen
+                .scale([700]); // scale things down so see entire US
 
     // Create d3 geo path
     vis.path = d3.geoPath()
@@ -55,72 +55,75 @@ MapVis.prototype.initVis = function() {
     vis.abToName = {};
     var prisonRates = [];
     //console.log("abbrev data", vis.abbrevData);
-        for (var i = 0; i < vis.abbrevData.length; i++) {
-            //console.log("abbrevs[i", abbrevs[i]);
-            var currState = vis.abbrevData[i];
-            vis.abToName[currState.Code] = currState.State;
-            vis.abToName[currState.State] = currState.Code;
-        };
+    for (var i = 0; i < vis.abbrevData.length; i++) {
+        //console.log("abbrevs[i", abbrevs[i]);
+        var currState = vis.abbrevData[i];
+        vis.abToName[currState.Code] = currState.State;
+        vis.abToName[currState.State] = currState.Code;
+    }
 
-        //console.log("abtoname2", this.abToName);
-        vis.indexedData = {};
-        vis.filteredData.forEach(function(d) {
-            //console.log(d);
-            var currState = d.State;
-            var abbrev = vis.abToName[currState];
-            vis.indexedData[abbrev] = d;
-        });
-        console.log("indexed data", vis.indexedData);
+    //console.log("abtoname2", this.abToName);
+    vis.indexedData = {};
+    vis.filteredData.forEach(function(d) {
+        //console.log(d);
+        var currState = d.State;
+        var abbrev = vis.abToName[currState];
+        vis.indexedData[abbrev] = d;
+    });
+    console.log("indexed data", vis.indexedData);
 
-        // Initialize color scale
-        // Put all number vals into an array
-        vis.filteredData.forEach(function (d) {
-            //console.log("d", d);
-            for (var i = 0; i < 37; i++) {
-                var year = (1978 + i).toString();
-                //console.log("year", year);
-                //console.log("+d[i]", d[year]);
-                if (!isNaN(+d[year])) {
-                    //console.log("+d[i] 2", +d[year]);
-                    prisonRates.push(+d[year]);
-                }
+    // Initialize color scale
+    // Put all number vals into an array
+    vis.filteredData.forEach(function (d) {
+        //console.log("d", d);
+        for (var i = 0; i < 37; i++) {
+            var year = (1978 + i).toString();
+            //console.log("year", year);
+            //console.log("+d[i]", d[year]);
+            if (!isNaN(+d[year])) {
+                //console.log("+d[i] 2", +d[year]);
+                prisonRates.push(+d[year]);
             }
+        }
+    });
+    //console.log("prisonRates", prisonRates);
+    var maxVal = d3.max(prisonRates);
+    console.log("max val", maxVal);
+
+    vis.color = d3.scaleQuantize()
+        .domain([0.0, (maxVal - 512)])
+        .range(['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']);
+
+    // Convert topojson format
+    // Help from https://bl.ocks.org/mbostock/4090848
+    vis.usStates = topojson.feature(vis.stateJson, vis.stateJson.objects.states).features;
+
+    // Draw path
+    vis.myPath = vis.svg
+        .selectAll("path")
+        .data(vis.usStates)
+        .enter()
+        .append("path")
+        .attr("d", vis.path)
+        .attr("fill", d => vis.updateColor(d))
+        .attr("stroke", "white")
+        .on('mouseover', function(d) {
+            vis.tip.show(d);
+            let stateName = d.properties.name;
+            let stateCode = vis.abToName[stateName];
+            let stateData = vis.indexedData[stateCode];
+            $(vis.eventHandler).trigger("choroStateHover", [stateName, stateData]);
+        })
+        .on('mouseout', function(d) {
+            vis.tip.hide(d);
+            $(vis.eventHandler).trigger("choroStateUnhover");
         });
-        //console.log("prisonRates", prisonRates);
-        var maxVal = d3.max(prisonRates);
-        console.log("max val", maxVal);
 
-        vis.color = d3.scaleQuantize()
-            .domain([0.0, (maxVal - 512)])
-            .range(['#fee5d9','#fcae91','#fb6a4a','#de2d26','#a50f15']);
-
-        // Convert topojson format
-        // Help from https://bl.ocks.org/mbostock/4090848
-            vis.usStates = topojson.feature(vis.stateJson, vis.stateJson.objects.states).features;
-            //console.log("usStates", vis.usStates);
-
-            // Draw path
-            vis.myPath = vis.svg
-                .selectAll("path")
-                .data(vis.usStates)
-                .enter()
-                .append("path")
-                .attr("d", vis.path)
-                .attr("fill", d => vis.updateColor(d))
-                .on('mouseover', vis.tip.show)
-                .on('mouseout', vis.tip.hide);
-                // .on("mouseover", function(d) {
-                //     vis.tooltip.html("hello" + "<br>")
-                //         .style("left", (d3.event.pageX) + "px")
-                //         .style("top", (d3.event.pageY - 28) + "px")
-                // })
-                // .on("mouseout", vis.tooltip.style("opacity", 0));
-
-            vis.svg.append("path")
-                .attr("class", "state-borders")
-                .attr("d", vis.path(vis.usStates, function (a, b) {
-                    return a !== b;
-                }));
+    vis.svg.append("path")
+        .attr("class", "state-borders")
+        .attr("d", vis.path(vis.usStates, function (a, b) {
+            return a !== b;
+        }));
 
     // Initialize slider
     // Adapted from https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
@@ -154,9 +157,17 @@ MapVis.prototype.initVis = function() {
         .attr("fill", "white")
         .attr("x", vis.width/2)
         .attr("y", 110)
+        .attr("text-anchor", "middle")
         .attr("font-size", 20)
         .attr("font-weight", "bold")
         .text("1998");
+    vis.hoverLabel = vis.svg.append("text")
+        .attr("fill", "white")
+        .attr("x", vis.width / 2)
+        .attr("y", 135)
+        .attr("font-size", 13)
+        .attr("text-anchor", "middle")
+        .text("Hover over a state to see its incarceration rates over time");
     // 4. Bind event handler
     // when 'selectionChanged' is triggered, specified function is called
     $(vis.eventHandler).bind("selectionChanged", function(event, year){
@@ -284,7 +295,7 @@ MapVis.prototype.getInfo = function(d) {
         if (prisonPop) {
             //console.log("prisonpop", stateName, prisonPop);
             //console.log("color", vis.color(prisonPop));
-            return stateCode + " Proportion Incarcerated:" + "<br>" + prisonPop + "/ 100,000";
+            return stateCode + ": Proportion Incarcerated:" + "<br>" + prisonPop + "/100,000";
         } else {
             return "N/A"
         }
