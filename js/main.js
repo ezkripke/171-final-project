@@ -52,6 +52,8 @@ function loadData(error, usTileGrid, raceData, stateData, stateAbbrevs, stateJso
 
     setUpTileGridWalkthrough(usLineVis, tileGridVis);
 
+    setUpBubbleVisWalkthrough();
+
     $(eventHandler).bind("tileMouseOver", function(e, stateData) {
         usLineVis.onTileMouseOver(stateData);
     });
@@ -160,5 +162,69 @@ function setUpTileGridWalkthrough(usLineVis, tileGridVis) {
             usLineVis.unhighlightLine();
             tileGridVis.tiles.forEach(t => t.unhighlightLine());
         }
+    });
+}
+
+function setUpBubbleVisWalkthrough() {
+    let wt = new Walkthrough(
+        "bubble-vis-walkthrough",
+        "#bubble-area",
+        "left",
+        null,
+        "Begin Guide"
+    );
+
+    wt.addStep({
+        "placement": ["#bubble-area", "left"],
+        "text": "This bubble chart depicts rates of incarceration among different races for each state",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
+    });
+
+    wt.addStep({
+        "placement": ["#bubble-area", "right"],
+        "text": "To select a particular race, click on one of the options to the left",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
+    });
+
+    wt.addStep({
+        "placement": ["#bubble-area", "left"],
+        "text": "Each state bubble's area represents the ratio of the selected race's incarcerated population to the selected race's total state population",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
+    });
+
+    wt.addStep({
+        "placement": ["#bubble-area", "left"],
+        "text": "Hover over a state <b>bubble</b> to see this as an exact percentage",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
+    });
+
+    wt.addStep({
+        "placement": ["#bubble-area", "left"],
+        "text": "Hover over a state <b>label</b> to see the difference in percentage points of the rate compared to all the other states",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
+    });
+
+    wt.addStep({
+        "placement": ["#bubble-area", "right"],
+        "text": "To see an alternate view of this data click <b>'Change View'</b>. Try selecting other races and hovering in this mode as well!",
+        "buttonText": "Continue",
+        "moveTo": "#bubble-area",
+        "lock": true,
+        "animate": true
     });
 }

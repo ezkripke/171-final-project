@@ -371,7 +371,7 @@ BubbleVis.prototype.updateVis = function() {
                         if (vis.selectedRace !== "Black") return vis.y(e.row) - vis.radius(e[vis.selectedRace+'Rate']) - 5;
                         else return vis.y(e.row)+5;
                     })
-                    .style("fill", function (e) {
+                    .style("fill", function(e) {
                         let disp = (e[vis.selectedRace + 'Rate'] - d[vis.selectedRace + 'Rate']) * 100;
                         let fmt = d3.format("+.2f")(disp);
                         if (fmt < 0) {
