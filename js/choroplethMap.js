@@ -88,7 +88,6 @@ MapVis.prototype.initVis = function() {
     });
     //console.log("prisonRates", prisonRates);
     var maxVal = d3.max(prisonRates);
-    console.log("max val", maxVal);
 
     vis.color = d3.scaleQuantize()
         .domain([0.0, (maxVal - 512)])

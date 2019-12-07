@@ -56,13 +56,13 @@ TileGridVis.prototype.initVis = function() {
         .range([vis.y.bandwidth() - 5, 5]);
     vis.tileC = d3.scaleOrdinal()
         .domain([
+            "Asian",
+            "Black",
             "Latino",
             "White",
-            "Black",
-            "Asian",
             "Other"
         ])
-        .range(d3.schemeCategory10.slice(0, 5));
+        .range(colors);
 
     vis.svg.append("g")
         .attr("class", "legend")
@@ -160,10 +160,10 @@ function Tile(parent, data, x, y, c, eventHandler) {
     vis.height = vis.y.range()[0] + 5;
 
     vis.keys = [
+        "Asian",
+        "Black",
         "Latino",
         "White",
-        "Black",
-        "Asian",
         "Other"
     ];
 
