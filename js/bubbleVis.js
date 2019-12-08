@@ -205,7 +205,7 @@ BubbleVis.prototype.initVis = function() {
                     .attr("y", -10)
                     .attr("text-anchor", "end")
                     .style("font-size", "15px")
-                    .text("Incarcerated Population");
+                    .text("Incarcerated Race Population");
 
                 vis.svg.select(".y-axis-bubble")
                     .append("text")
